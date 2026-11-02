@@ -160,7 +160,8 @@ One-time setup (both registrations: owner `safisa`, repository `git-history-plus
   ([docs](https://code.visualstudio.com/api/working-with-extensions/publishing-extension)).
 - **Open VSX**: sign the Publisher Agreement and own the `safisa` namespace; publish the first version by hand
   (`npx ovsx publish <file>.vsix -p <token>`), then register the trusted publisher under Settings → Trusted Publishers
-  ([docs](https://github.com/eclipse-openvsx/openvsx/wiki/Trusted-Publishing)).
+  ([docs](https://github.com/eclipse-openvsx/openvsx/wiki/Trusted-Publishing)). Then set the repository variable
+  `PUBLISH_OPEN_VSX` to `true`; until then the Open VSX job is skipped.
 - **GitHub**: create the `publish` environment with required reviewers.
 
 ## Third-party software

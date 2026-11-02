@@ -58,6 +58,9 @@ jobs:
   open-vsx:
     name: Open VSX
     needs: package
+    # Skipped until the repository variable PUBLISH_OPEN_VSX is set to `true` (Open VSX needs a
+    # one-time manual first publish and a trusted-publisher registration).
+    if: vars.PUBLISH_OPEN_VSX == 'true'
     runs-on: ubuntu-latest
     environment: publish
     permissions:
