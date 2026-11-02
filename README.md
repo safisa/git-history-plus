@@ -139,6 +139,22 @@ npm run package           # produces git-history-plus-0.1.0.vsix
 CI runs on Ubuntu, macOS and Windows with Node 22 and 24. See `docs/acceptance-checklist.md` for the manual acceptance
 pass in VS Code and Theia.
 
+### Releasing
+
+Releases go to [Open VSX](https://open-vsx.org) through `.github/workflows/publish.yml`, using Open VSX
+[trusted publishing](https://github.com/eclipse-openvsx/openvsx/wiki/Trusted-Publishing): no access token is stored in
+the repository.
+
+1. Bump `version` in `package.json`, update `CHANGELOG.md`, and push.
+2. Create a GitHub Release whose tag is `v` plus that version (for example `v0.2.0`).
+3. Approve the run in the `publish` environment. It checks the tag, runs lint, typecheck, the unit and integration
+   tests and the audit, packages the `.vsix` and publishes it.
+
+One-time setup: the first version is published by hand (`npx ovsx publish <file>.vsix -p <token>`) after signing the
+Open VSX Publisher Agreement and owning the `safisa` namespace. Then register the trusted publisher on open-vsx.org
+(Settings → Trusted Publishers: owner `safisa`, repository `git-history-plus`, workflow `publish.yml`, environment
+`publish`), and give the `publish` environment required reviewers in the repository settings.
+
 ## Third-party software
 
 The webview bundles React, React DOM, scheduler, TanStack Virtual and the VS Code Codicons font; their licenses and
