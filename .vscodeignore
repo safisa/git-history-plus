@@ -1,0 +1,14 @@
+**
+!dist/extension.js
+!dist/webview.js
+!dist/webview.css
+!dist/codicon.ttf
+!images/icon.png
+!images/history.svg
+!images/history-light.svg
+!images/history-dark.svg
+!package.json
+!README.md
+!CHANGELOG.md
+!LICENSE
+!THIRD_PARTY_NOTICES.md

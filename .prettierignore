@@ -1,0 +1,8 @@
+dist
+node_modules
+.superpowers
+.a5c
+.claude
+docs
+package-lock.json
+out

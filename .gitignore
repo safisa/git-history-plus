@@ -1,0 +1,11 @@
+.superpowers/
+.a5c/
+.claude/settings.local.json
+node_modules/
+dist/
+*.vsix
+.vscode-test/
+coverage/
+*.tsbuildinfo
+*.bak
+out/

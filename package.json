@@ -1,0 +1,493 @@
+{
+  "name": "git-history-plus",
+  "displayName": "Git History Plus",
+  "description": "View git log, file history and line history with a graph, and compare commits and branches. A modernized fork of Git History.",
+  "version": "0.1.0",
+  "publisher": "safisa",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/safisa/git-history-plus.git"
+  },
+  "icon": "images/icon.png",
+  "categories": [
+    "SCM Providers",
+    "Other"
+  ],
+  "engines": {
+    "vscode": "^1.101.0",
+    "node": ">=22"
+  },
+  "extensionKind": [
+    "workspace"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run",
+    "test:integration": "node test/integration/makeFixture.mjs && node esbuild.mjs && vscode-test",
+    "lint": "eslint . && prettier --check .",
+    "package": "node esbuild.mjs --production && vsce package --no-dependencies",
+    "audit:prod": "npm audit --omit=dev --audit-level=low"
+  },
+  "dependencies": {
+    "@tanstack/react-virtual": "^3.14.25",
+    "@vscode/codicons": "^0.0.46-24",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/vscode": "1.101.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.1.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.14.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.14.0",
+    "jsdom": "^30.1.3",
+    "mocha": "^12.0.3",
+    "prettier": "^3.9.10",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.0.5"
+  },
+  "contributes": {
+    "configuration": {
+      "title": "Git History Plus",
+      "properties": {
+        "gitHistoryPlus.alwaysPromptRepositoryPicker": {
+          "type": "boolean",
+          "default": false,
+          "description": "Always prompt to pick a repository, even when the active file belongs to one."
+        },
+        "gitHistoryPlus.includeRemoteBranches": {
+          "type": "boolean",
+          "default": false,
+          "description": "Include remote branches when showing all branches in the history."
+        },
+        "gitHistoryPlus.showEditorTitleMenuBarIcons": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the Git History Plus icons in the editor title menu bar."
+        },
+        "gitHistoryPlus.editorTitleButtonOpenRepo": {
+          "type": "boolean",
+          "default": false,
+          "description": "Make the editor title button open the repository history instead of the file history."
+        },
+        "gitHistoryPlus.pageSize": {
+          "type": "integer",
+          "default": 100,
+          "description": "Number of commits to load per page (1 to 1000).",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "gitHistoryPlus.hideCommitViewExplorer": {
+          "type": "boolean",
+          "default": false,
+          "description": "Hide the commit details view in the Explorer."
+        },
+        "gitHistoryPlus.hideCompareCommitViewExplorer": {
+          "type": "boolean",
+          "default": false,
+          "description": "Hide the compare commits view in the Explorer."
+        },
+        "gitHistoryPlus.logLevel": {
+          "type": "string",
+          "default": "Info",
+          "enum": [
+            "None",
+            "Info",
+            "Debug"
+          ],
+          "description": "Verbosity of the Git History Plus output channel."
+        },
+        "gitHistoryPlus.sourceCodeProviderIntegrationLocation": {
+          "type": "string",
+          "default": "Inline",
+          "enum": [
+            "Inline",
+            "More Actions"
+          ],
+          "enumDescriptions": [
+            "Show the 'View History' action on the title of SCM Providers",
+            "Show the 'View History' action in the 'More Actions...' menu on the title of SCM Providers"
+          ],
+          "description": "Where to show the View History action for SCM Providers."
+        },
+        "gitHistoryPlus.dateFormat": {
+          "type": "string",
+          "default": "relative",
+          "description": "How commit dates are shown. \"relative\" shows e.g. \"3 days ago\"; otherwise a date format."
+        },
+        "gitHistoryPlus.avatars": {
+          "type": "string",
+          "default": "off",
+          "description": "Show author avatars. Avatars are fetched by the extension from the chosen service; \"off\" makes no network requests.",
+          "enum": [
+            "off",
+            "github",
+            "gravatar"
+          ]
+        },
+        "gitHistoryPlus.defaultMaxCount": {
+          "type": "integer",
+          "default": 0,
+          "description": "Maximum number of commits to load in total. 0 means unlimited.",
+          "minimum": 0
+        },
+        "gitHistoryPlus.dimMergeCommits": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show merge commits dimmed in the history, so commits that change code stand out."
+        },
+        "gitHistoryPlus.showStatusBarItem": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a status bar button that opens the repository history."
+        },
+        "gitHistoryPlus.issueLinks": {
+          "type": "array",
+          "default": [],
+          "markdownDescription": "Turn issue keys in commit messages into links. Each entry has a `pattern` (a regular expression) and a `url` where `$0` is the whole match and `$1`…`$9` are its groups, for example `{ \"pattern\": \"\\\\b([A-Z][A-Z0-9]+-\\\\d+)\\\\b\", \"url\": \"https://jira.example.com/browse/$1\" }`. Only http and https links open.",
+          "items": {
+            "type": "object",
+            "required": [
+              "pattern",
+              "url"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "pattern": {
+                "type": "string",
+                "description": "Regular expression matched against the commit message."
+              },
+              "url": {
+                "type": "string",
+                "description": "Link target; $0 is the match, $1…$9 its groups."
+              }
+            }
+          }
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "gitHistoryPlus.previousVersion",
+        "title": "Previous Version of File",
+        "category": "Git History Plus",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "gitHistoryPlus.nextVersion",
+        "title": "Next Version of File",
+        "category": "Git History Plus",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "gitHistoryPlus.viewHistory",
+        "title": "View History",
+        "category": "Git History Plus",
+        "icon": "$(history)"
+      },
+      {
+        "command": "gitHistoryPlus.viewFileHistory",
+        "title": "View File History",
+        "category": "Git History Plus",
+        "icon": "$(history)"
+      },
+      {
+        "command": "gitHistoryPlus.viewFolderHistory",
+        "title": "View Folder History",
+        "category": "Git History Plus",
+        "icon": "$(history)"
+      },
+      {
+        "command": "gitHistoryPlus.viewLineHistory",
+        "title": "View Line History",
+        "category": "Git History Plus"
+      },
+      {
+        "command": "gitHistoryPlus.refresh",
+        "title": "Refresh",
+        "category": "Git History Plus",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "gitHistoryPlus.selectForComparison",
+        "title": "Select for Comparison",
+        "category": "Git History Plus"
+      },
+      {
+        "command": "gitHistoryPlus.compareWithSelected",
+        "title": "Compare with Selected",
+        "category": "Git History Plus"
+      },
+      {
+        "command": "gitHistoryPlus.compareRefs",
+        "title": "Compare Branches, Tags or Commits…",
+        "category": "Git History Plus",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "gitHistoryPlus.compareFileWithRef",
+        "title": "Compare File with Branch or Tag…",
+        "category": "Git History Plus"
+      },
+      {
+        "command": "gitHistoryPlus.compareView.hide",
+        "title": "Hide Compare View",
+        "category": "Git History Plus",
+        "icon": "$(close)"
+      },
+      {
+        "command": "gitHistoryPlus.compareView.showFilesOnly",
+        "title": "Compare View: Files Only",
+        "category": "Git History Plus",
+        "icon": "$(list-flat)"
+      },
+      {
+        "command": "gitHistoryPlus.compareView.showFolderView",
+        "title": "Compare View: Folder View",
+        "category": "Git History Plus",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "gitHistoryPlus.commitView.show",
+        "title": "Show Commit in Explorer",
+        "category": "Git History Plus"
+      },
+      {
+        "command": "gitHistoryPlus.commitView.hide",
+        "title": "Hide Commit View",
+        "category": "Git History Plus",
+        "icon": "$(close)"
+      },
+      {
+        "command": "gitHistoryPlus.commitView.showFilesOnly",
+        "title": "Commit View: Files Only",
+        "category": "Git History Plus",
+        "icon": "$(list-flat)"
+      },
+      {
+        "command": "gitHistoryPlus.commitView.showFolderView",
+        "title": "Commit View: Folder View",
+        "category": "Git History Plus",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "gitHistoryPlus.compareView.openFile",
+        "title": "Open Compared File Diff",
+        "category": "Git History Plus"
+      },
+      {
+        "command": "gitHistoryPlus.commitView.openFile",
+        "title": "Open Commit File Diff",
+        "category": "Git History Plus"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "gitHistoryPlus.previousVersion",
+          "group": "navigation@1",
+          "when": "gitHistoryPlus.inFileHistoryDiff"
+        },
+        {
+          "command": "gitHistoryPlus.nextVersion",
+          "group": "navigation@2",
+          "when": "gitHistoryPlus.inFileHistoryDiff"
+        },
+        {
+          "command": "gitHistoryPlus.viewFileHistory",
+          "group": "navigation",
+          "when": "config.git.enabled && gitOpenRepositoryCount != 0 && !config.gitHistoryPlus.editorTitleButtonOpenRepo && resourceScheme == file && config.gitHistoryPlus.showEditorTitleMenuBarIcons"
+        },
+        {
+          "command": "gitHistoryPlus.viewHistory",
+          "group": "navigation",
+          "when": "config.git.enabled && gitOpenRepositoryCount != 0 && config.gitHistoryPlus.editorTitleButtonOpenRepo && resourceScheme == file && config.gitHistoryPlus.showEditorTitleMenuBarIcons"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "gitHistoryPlus.viewFileHistory",
+          "group": "git",
+          "when": "config.git.enabled && gitOpenRepositoryCount != 0 && config.gitHistoryPlus.showEditorTitleMenuBarIcons"
+        },
+        {
+          "command": "gitHistoryPlus.compareFileWithRef",
+          "group": "git",
+          "when": "config.git.enabled && gitOpenRepositoryCount != 0 && resourceScheme == file"
+        }
+      ],
+      "scm/title": [
+        {
+          "command": "gitHistoryPlus.viewHistory",
+          "group": "navigation",
+          "when": "config.git.enabled && gitOpenRepositoryCount != 0 && config.gitHistoryPlus.sourceCodeProviderIntegrationLocation == 'Inline'"
+        },
+        {
+          "command": "gitHistoryPlus.viewHistory",
+          "group": "inline",
+          "when": "config.git.enabled && gitOpenRepositoryCount != 0 && config.gitHistoryPlus.sourceCodeProviderIntegrationLocation == 'More Actions'"
+        }
+      ],
+      "scm/resourceState/context": [
+        {
+          "command": "gitHistoryPlus.viewFileHistory",
+          "when": "config.git.enabled && gitOpenRepositoryCount != 0"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "gitHistoryPlus.viewFileHistory",
+          "group": "git",
+          "when": "config.git.enabled && gitOpenRepositoryCount != 0 && !explorerResourceIsFolder"
+        },
+        {
+          "command": "gitHistoryPlus.viewFolderHistory",
+          "group": "git",
+          "when": "config.git.enabled && gitOpenRepositoryCount != 0 && explorerResourceIsFolder"
+        },
+        {
+          "command": "gitHistoryPlus.compareFileWithRef",
+          "group": "git",
+          "when": "config.git.enabled && gitOpenRepositoryCount != 0 && !explorerResourceIsFolder"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "gitHistoryPlus.viewFileHistory",
+          "group": "git",
+          "when": "config.git.enabled && gitOpenRepositoryCount != 0"
+        },
+        {
+          "command": "gitHistoryPlus.viewLineHistory",
+          "group": "git",
+          "when": "config.git.enabled && gitOpenRepositoryCount != 0"
+        },
+        {
+          "command": "gitHistoryPlus.compareFileWithRef",
+          "group": "git",
+          "when": "config.git.enabled && gitOpenRepositoryCount != 0 && resourceScheme == file"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "gitHistoryPlus.previousVersion",
+          "when": "gitHistoryPlus.inFileHistoryDiff"
+        },
+        {
+          "command": "gitHistoryPlus.nextVersion",
+          "when": "gitHistoryPlus.inFileHistoryDiff"
+        },
+        {
+          "command": "gitHistoryPlus.selectForComparison",
+          "when": "false"
+        },
+        {
+          "command": "gitHistoryPlus.compareWithSelected",
+          "when": "false"
+        },
+        {
+          "command": "gitHistoryPlus.commitView.show",
+          "when": "false"
+        },
+        {
+          "command": "gitHistoryPlus.compareView.openFile",
+          "when": "false"
+        },
+        {
+          "command": "gitHistoryPlus.commitView.openFile",
+          "when": "false"
+        },
+        {
+          "command": "gitHistoryPlus.viewFolderHistory",
+          "when": "false"
+        },
+        {
+          "command": "gitHistoryPlus.compareFileWithRef",
+          "when": "config.git.enabled && gitOpenRepositoryCount != 0 && resourceScheme == file"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "gitHistoryPlus.compareRefs",
+          "when": "view == gitHistoryPlus.compareView",
+          "group": "navigation@0"
+        },
+        {
+          "command": "gitHistoryPlus.compareView.hide",
+          "when": "view == gitHistoryPlus.compareView",
+          "group": "navigation@3"
+        },
+        {
+          "command": "gitHistoryPlus.compareView.showFilesOnly",
+          "when": "view == gitHistoryPlus.compareView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "gitHistoryPlus.compareView.showFolderView",
+          "when": "view == gitHistoryPlus.compareView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "gitHistoryPlus.commitView.hide",
+          "when": "view == gitHistoryPlus.commitView",
+          "group": "navigation@3"
+        },
+        {
+          "command": "gitHistoryPlus.commitView.showFilesOnly",
+          "when": "view == gitHistoryPlus.commitView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "gitHistoryPlus.commitView.showFolderView",
+          "when": "view == gitHistoryPlus.commitView",
+          "group": "navigation@2"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "gitHistoryPlus.viewHistory",
+        "key": "ctrl+alt+h",
+        "when": "!terminalFocus"
+      },
+      {
+        "command": "gitHistoryPlus.viewFileHistory",
+        "key": "alt+h",
+        "when": "editorFocus || filesExplorerFocus"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "gitHistoryPlus.commitView",
+          "name": "Commits",
+          "when": "!config.gitHistoryPlus.hideCommitViewExplorer && gitHistoryPlus.commitView.visible",
+          "icon": "images/history.svg"
+        },
+        {
+          "id": "gitHistoryPlus.compareView",
+          "name": "Compare Commits",
+          "when": "!config.gitHistoryPlus.hideCompareCommitViewExplorer && gitHistoryPlus.compareView.visible",
+          "icon": "images/history.svg"
+        }
+      ]
+    }
+  }
+}
