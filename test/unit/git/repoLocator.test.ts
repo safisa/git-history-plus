@@ -6,6 +6,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import * as vscode from 'vscode';
 import * as vscodeMock from '../../mocks/vscode';
 import type { GitService } from '../../../src/git/gitService';
+import { runGit } from '../../../src/git/exec';
 import { RepoLocator } from '../../../src/git/repoLocator';
 import { makeRepo, type TestRepo } from '../../helpers/repo';
 
@@ -197,11 +198,24 @@ describe.skipIf(process.platform !== 'win32')('RepoLocator Windows paths', () =>
     await r.commit('a.txt', 'x', 'c1');
     const real = await realpath(r.dir);
     const unc = `\\\\localhost\\${real[0]}$${real.slice(2)}`;
-    // The administrative share needs the Server service; CI runners usually don't offer it.
+    // The administrative share needs the Server service; skip where it isn't offered.
     if (!existsSync(join(unc, 'a.txt'))) return ctx.skip();
-    const svc = await locator().repoFor(uri(join(unc, 'a.txt')));
-    expect(svc).toBeDefined();
-    expect(basename(svc!.root).toLowerCase()).toBe(basename(real).toLowerCase());
+    // Git refuses a repository on a network path whose owner it can't verify ("dubious ownership")
+    // unless safe.directory allows it; a user working over UNC must trust the share the same way.
+    const env = { GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: 'safe.directory', GIT_CONFIG_VALUE_0: '*' };
+    Object.assign(process.env, env);
+    try {
+      const svc = await locator().repoFor(uri(join(unc, 'a.txt')));
+      if (!svc) {
+        const why = await runGit('git', unc, ['rev-parse', '--show-toplevel']).catch((e: unknown) =>
+          String(e),
+        );
+        expect.fail(`UNC path not resolved; git rev-parse there says: ${why}`);
+      }
+      expect(basename(svc.root).toLowerCase()).toBe(basename(real).toLowerCase());
+    } finally {
+      for (const k of Object.keys(env)) delete process.env[k];
+    }
   });
 });
 
