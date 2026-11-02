@@ -1,9 +1,9 @@
-name: Publish to Open VSX
+name: Publish
 
-# Publishes with Open VSX trusted publishing: GitHub's OIDC token is exchanged for a short-lived,
-# single-extension token, so no access token is stored in this repository. The registration on
-# open-vsx.org names this file (publish.yml) and the `publish` environment; give that environment
-# required reviewers so nothing is published without an approval.
+# Publishes a GitHub release to Open VSX and the VS Code Marketplace with trusted publishing: each
+# store exchanges GitHub's OIDC token for a short-lived credential, so no access token is stored in
+# this repository. Both registrations name this file (publish.yml) and the `publish` environment;
+# give that environment required reviewers so nothing is published without an approval.
 
 on:
   release:
@@ -17,13 +17,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
-    name: Open VSX
+  package:
+    name: Test and package
     runs-on: ubuntu-latest
-    environment: publish
-    permissions:
-      contents: read
-      id-token: write # for the OIDC token Open VSX exchanges
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -51,6 +47,44 @@ jobs:
 
       - name: Package
         run: npm run package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: git-history-plus-*.vsix
+          if-no-files-found: error
 
-      - name: Publish
-        run: npx --yes ovsx@1.3.0 publish --trusted-publishing --packagePath git-history-plus-*.vsix
+  # Each store publishes the same .vsix in its own job: a failure in one doesn't block the other,
+  # and re-running only the failed job doesn't try to publish a version twice.
+  open-vsx:
+    name: Open VSX
+    needs: package
+    runs-on: ubuntu-latest
+    environment: publish
+    permissions:
+      contents: read
+      id-token: write # for the OIDC token Open VSX exchanges
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: vsix
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npx --yes ovsx@1.3.0 publish --trusted-publishing --packagePath git-history-plus-*.vsix
+
+  marketplace:
+    name: VS Code Marketplace
+    needs: package
+    runs-on: ubuntu-latest
+    environment: publish
+    permissions:
+      contents: read
+      id-token: write # for the OIDC token the Marketplace exchanges
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: vsix
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npx --yes @vscode/vsce@4.1.0 publish --oidc --packagePath git-history-plus-*.vsix

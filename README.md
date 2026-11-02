@@ -141,19 +141,27 @@ pass in VS Code and Theia.
 
 ### Releasing
 
-Releases go to [Open VSX](https://open-vsx.org) through `.github/workflows/publish.yml`, using Open VSX
-[trusted publishing](https://github.com/eclipse-openvsx/openvsx/wiki/Trusted-Publishing): no access token is stored in
-the repository.
+Releases go to the [VS Code Marketplace](https://marketplace.visualstudio.com) and [Open VSX](https://open-vsx.org)
+through `.github/workflows/publish.yml`, using each store's trusted publishing (GitHub's OIDC token is exchanged for a
+short-lived credential), so no access token is stored in the repository.
 
 1. Bump `version` in `package.json`, update `CHANGELOG.md`, and push.
 2. Create a GitHub Release whose tag is `v` plus that version (for example `v0.2.0`).
-3. Approve the run in the `publish` environment. It checks the tag, runs lint, typecheck, the unit and integration
-   tests and the audit, packages the `.vsix` and publishes it.
+3. The workflow checks the tag, runs lint, typecheck, the unit and integration tests and the audit, and packages the
+   `.vsix` once. Approve the two publish jobs (Marketplace, Open VSX) in the `publish` environment; each store gets the
+   same `.vsix`, and a failed job can be re-run on its own.
 
-One-time setup: the first version is published by hand (`npx ovsx publish <file>.vsix -p <token>`) after signing the
-Open VSX Publisher Agreement and owning the `safisa` namespace. Then register the trusted publisher on open-vsx.org
-(Settings → Trusted Publishers: owner `safisa`, repository `git-history-plus`, workflow `publish.yml`, environment
-`publish`), and give the `publish` environment required reviewers in the repository settings.
+One-time setup (both registrations: owner `safisa`, repository `git-history-plus`, workflow `publish.yml`, environment
+`publish`):
+
+- **VS Code Marketplace**: create the `safisa` publisher at
+  [marketplace.visualstudio.com/manage](https://marketplace.visualstudio.com/manage) with a Microsoft account, then add
+  a policy under the publisher's **Trusted Publishing**
+  ([docs](https://code.visualstudio.com/api/working-with-extensions/publishing-extension)).
+- **Open VSX**: sign the Publisher Agreement and own the `safisa` namespace; publish the first version by hand
+  (`npx ovsx publish <file>.vsix -p <token>`), then register the trusted publisher under Settings → Trusted Publishers
+  ([docs](https://github.com/eclipse-openvsx/openvsx/wiki/Trusted-Publishing)).
+- **GitHub**: create the `publish` environment with required reviewers.
 
 ## Third-party software
 

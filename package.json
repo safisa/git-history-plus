@@ -11,6 +11,17 @@
     "url": "https://github.com/safisa/git-history-plus.git"
   },
   "icon": "images/icon.png",
+  "keywords": [
+    "git",
+    "history",
+    "git log",
+    "git graph",
+    "file history",
+    "line history",
+    "compare",
+    "diff",
+    "theia"
+  ],
   "categories": [
     "SCM Providers",
     "Other"
