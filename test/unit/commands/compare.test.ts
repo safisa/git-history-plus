@@ -136,7 +136,7 @@ describe('compareFileWithRef', () => {
     expect(cmd).toBe('vscode.diff');
     expect(JSON.parse(left.query)).toEqual({ root: repo.dir, ref: c1 });
     expect(left.path).toBe('/dir/a.txt');
-    expect(right.fsPath).toBe(join(repo.dir, 'dir', 'a.txt'));
+    expect(right.fsPath).toBe(vscode.Uri.file(join(repo.dir, 'dir', 'a.txt')).fsPath);
     expect(title).toBe('a.txt (v1 ↔ workspace)');
   });
 

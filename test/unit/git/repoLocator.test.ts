@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { mkdtemp, mkdir, realpath, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
@@ -191,11 +192,13 @@ describe.skipIf(process.platform !== 'win32')('RepoLocator Windows paths', () =>
     expect(svc?.root.toLowerCase()).toBe(real.toLowerCase());
   });
 
-  it('resolves a file addressed through a UNC root (\\\\localhost\\C$\\...)', async () => {
+  it('resolves a file addressed through a UNC root (\\\\localhost\\C$\\...)', async (ctx) => {
     const r = await repo();
     await r.commit('a.txt', 'x', 'c1');
     const real = await realpath(r.dir);
     const unc = `\\\\localhost\\${real[0]}$${real.slice(2)}`;
+    // The administrative share needs the Server service; CI runners usually don't offer it.
+    if (!existsSync(join(unc, 'a.txt'))) return ctx.skip();
     const svc = await locator().repoFor(uri(join(unc, 'a.txt')));
     expect(svc).toBeDefined();
     expect(basename(svc!.root).toLowerCase()).toBe(basename(real).toLowerCase());

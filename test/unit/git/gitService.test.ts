@@ -211,7 +211,8 @@ describe('GitService details / diffFiles / show', () => {
     await r.git('rm', 'old.txt');
     await r.commit('new.txt', 'n', 'b');
     await r.commit('my file.txt', 'sp', 'c');
-    await r.commit('a\nb.txt', 'nl', 'd');
+    const newlineNames = process.platform !== 'win32'; // Windows forbids \n in file names
+    if (newlineNames) await r.commit('a\nb.txt', 'nl', 'd');
     await r.commit('bin.dat', 'a\0b', 'e');
     const b = (await r.git('rev-parse', 'HEAD')).trim();
     const files = await svc(r).diffFiles(a, b);
@@ -219,7 +220,7 @@ describe('GitService details / diffFiles / show', () => {
     expect(by('new.txt')?.status).toBe('A');
     expect(by('old.txt')?.status).toBe('D');
     expect(by('my file.txt')?.status).toBe('A');
-    expect(by('a\nb.txt')?.status).toBe('A');
+    if (newlineNames) expect(by('a\nb.txt')?.status).toBe('A');
     expect(by('bin.dat')).toMatchObject({ status: 'A', binary: true });
   });
 

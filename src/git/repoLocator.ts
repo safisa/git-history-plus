@@ -1,4 +1,4 @@
-import { realpathSync as realpathSyncNative } from 'node:fs';
+import { realpathSync } from 'node:fs';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
@@ -127,7 +127,9 @@ export class RepoLocator implements vscode.Disposable {
 
   private realpathSync(p: string): string {
     try {
-      return realpathSyncNative(p);
+      // The native realpath, like fs/promises' realpath: on Windows it expands 8.3 short names
+      // (RUNNER~1), so a repository reached either way gets one key and one service.
+      return realpathSync.native(p);
     } catch {
       return p;
     }

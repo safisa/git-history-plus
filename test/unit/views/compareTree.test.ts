@@ -35,7 +35,7 @@ describe('CompareCommitsTreeProvider', () => {
     expect(a.description).toContain('src');
     expect(a.description).toContain('M');
     expect(a.tooltip).toContain('src/a.ts');
-    expect(a.resourceUri?.fsPath).toBe(`${repo.dir}/src/a.ts`);
+    expect(a.resourceUri?.fsPath).toBe(vscode.Uri.file(`${repo.dir}/src/a.ts`).fsPath);
     expect(a.command?.command).toBe('gitHistoryPlus.compareView.openFile');
     expect(a.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
   });

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { realpath } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { DEFAULT_MAX_BUFFER, GitError, resolveGitPath, runGit, runGitBuffer } from '../../../src/git/exec';
 import { makeRepo, type TestRepo } from '../../helpers/repo';
 
@@ -14,7 +15,7 @@ describe('git exec', () => {
 
   it('returns stdout of rev-parse --show-toplevel', async () => {
     const out = await runGit('git', repo.dir, ['rev-parse', '--show-toplevel']);
-    expect(out.trim()).toBe(await realpath(repo.dir));
+    expect(resolve(out.trim())).toBe(await realpath(repo.dir)); // git prints C:/… on Windows
   });
 
   it('rejects with GitError carrying exitCode, stderr and args', async () => {

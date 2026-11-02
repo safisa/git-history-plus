@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as vscode from 'vscode';
 import { compareFiles, compareWithWorkspace, openDiff, openFileAt } from '../../src/diff';
@@ -77,7 +78,7 @@ describe('compareFiles / compareWithWorkspace / openFileAt', () => {
     expect(cmd).toBe('vscode.diff');
     expect(fromGitUri(l)).toEqual({ root: '/repo', path: 'src/a.ts', ref: C });
     expect(r.scheme).toBe('file');
-    expect(r.fsPath).toBe('/repo/src/a.ts');
+    expect(r.fsPath).toBe(vscode.Uri.file(resolve('/repo/src/a.ts')).fsPath); // D:\repo\… on Windows
     expect(title).toBe('a.ts (ccccccc ↔ workspace)');
   });
   it('compareWithWorkspace refuses a path that resolves outside the repository', async () => {
@@ -87,7 +88,7 @@ describe('compareFiles / compareWithWorkspace / openFileAt', () => {
   });
   it('compareWithWorkspace accepts a file whose name merely starts with two dots', async () => {
     await compareWithWorkspace(svc, C, '..hidden');
-    expect((call()[2] as vscode.Uri).fsPath).toBe('/repo/..hidden');
+    expect((call()[2] as vscode.Uri).fsPath).toBe(vscode.Uri.file(resolve('/repo/..hidden')).fsPath);
   });
   it('openFileAt opens the commit version via vscode.open', async () => {
     await openFileAt(svc, C, 'src/a.ts');

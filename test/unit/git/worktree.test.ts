@@ -176,7 +176,7 @@ describe('requests about the uncommitted changes', () => {
     const [cmd, left, right, title] = exec.mock.calls[0]! as [string, vscode.Uri, vscode.Uri, string];
     expect(cmd).toBe('vscode.diff');
     expect(right.scheme).toBe('file');
-    expect(right.fsPath).toBe(join(svc.root, 'a.txt'));
+    expect(right.fsPath).toBe(vscode.Uri.file(join(svc.root, 'a.txt')).fsPath);
     expect(left.scheme).not.toBe('file');
     expect(title).toBe('a.txt (HEAD ↔ working tree)');
     await handleRequest(

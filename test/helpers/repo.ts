@@ -71,6 +71,7 @@ export async function makeRepo(opts: { sha256?: boolean } = {}): Promise<TestRep
       await run(dir, ['commit', '-m', msg], env);
       return (await run(dir, ['rev-parse', 'HEAD'])).trim();
     },
-    cleanup: () => rm(dir, { recursive: true, force: true }),
+    // Windows may hold a just-exited git's handles for a moment (EBUSY): retry rather than fail.
+    cleanup: () => rm(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }),
   };
 }
