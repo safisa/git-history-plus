@@ -107,8 +107,8 @@ The webview and your browser never contact third parties. Repository text is alw
 ## Requirements
 
 - VS Code 1.101.0 or newer (the first release whose extension host runs Node 22), or Eclipse Theia 1.76 or newer.
-  Theia 1.76 is a supported target pending the manual acceptance pass (`docs/acceptance-checklist.md`, Theia
-  column); until that pass is complete it is not yet verified.
+  Verified on a stock Eclipse Theia 1.76 browser app with the built-in Git extension (see "Theia 1.76 check" in
+  `docs/acceptance-checklist.md`). Theia applications that customize the workbench may need their own check.
 - `git` on the `PATH` of the machine where the workspace lives (the extension runs as a workspace extension, so it
   works with Remote-SSH, WSL and containers). The `git.path` setting is honoured.
 

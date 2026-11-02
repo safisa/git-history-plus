@@ -80,7 +80,7 @@ First release of Git History Plus, a maintained fork of Git History (`donjayaman
   The extension now activates once startup has finished, so the button is there from the start.
 - Settings `dateFormat`, `avatars` and `defaultMaxCount`; changes apply to open panels. With `avatars` on, author
   avatars are fetched by the extension host and shown in the list and the details.
-- Targets Eclipse Theia 1.76 as well as desktop VS Code (Theia support pending the manual acceptance pass).
+- Runs in Eclipse Theia 1.76 as well as desktop VS Code (checked in a stock Theia 1.76 browser app).
 
 ### Removed settings
 

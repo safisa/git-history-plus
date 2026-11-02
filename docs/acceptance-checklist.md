@@ -12,6 +12,30 @@ How to use this:
 
 Each item has two boxes: `VS Code (macOS)` then `Theia`.
 
+## Theia 1.76 check (2026-11-02)
+
+Done in a stock Theia 1.76.0 browser app (core, editor, filesystem, monaco, navigator, plugin-ext-vscode, scm,
+terminal, workspace and others, with the built-in `vscode.git` 1.95.3), driving Chromium through Playwright, with the
+`.vsix` extracted into `plugins/`. Everything below worked:
+
+- The status bar button, `ctrl+alt+h`, `alt+h` and the editor title buttons open the repository or file history.
+- Explorer right-click: View File History and Compare File with Branch or Tag… on a file, View Folder History on a
+  folder. File history follows a rename; the folder history lists only commits under the folder.
+- The commit table renders with the graph (merge lanes), branch, remote and tag badges, `main ☁ origin` folding,
+  dimmed merges, the dashed uncommitted changes row, and the `<svg/onload=alert(1)>` branch name as plain text.
+- Details: parent links, the branches and tags containing the commit (also in the hover card), the file list and
+  the tree toggle.
+- A click on a changed file opens a preview diff that the next click replaces; a double-click keeps it. Uncommitted
+  files open as HEAD ↔ working tree diffs; a past version opens with Previous / Next and refuses edits ("This is a
+  past version from git history and can't be edited.").
+- `Cmd+F` focuses the history's search box (not Theia's find); Escape returns to the list. Fetch goes through the
+  built-in Git extension.
+
+Not covered there: destructive commit actions and their dialogs, the Compare Commits view, avatars, and a history
+tab docked in a narrow side bar. Theia itself logs "INVALID tab" errors from its tab sync when a preview tab is
+replaced; they do not come from this extension. A webview in Theia is served from `<uuid>.webview.<host>`, so start
+Theia with a host name that resolves for subdomains (`localhost`, not `127.0.0.1`).
+
 | #   | Item                                                                      | VS Code (macOS) | Theia  |
 | --- | ------------------------------------------------------------------------- | --------------- | ------ |
 | A   | **Install and activation**                                                |                 |        |
