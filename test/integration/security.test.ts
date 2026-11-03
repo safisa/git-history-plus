@@ -20,7 +20,7 @@ const CSP_RE =
   /default-src 'none'; script-src 'nonce-([A-Za-z0-9_-]+)'; style-src (.+?) 'nonce-\1'; img-src \2 data:; font-src \2;/;
 
 async function api(): Promise<TestApi> {
-  const ext = vscode.extensions.getExtension('safisa.git-history-plus')!;
+  const ext = vscode.extensions.getExtension('safisa.githistory-plus')!;
   return (await ext.activate()) as TestApi;
 }
 

@@ -133,7 +133,7 @@ npm run typecheck
 npm run test:unit
 npm run test:integration  # needs a display; downloads a VS Code build
 npm run audit:prod
-npm run package           # produces git-history-plus-0.1.0.vsix
+npm run package           # produces githistory-plus-0.1.0.vsix
 ```
 
 CI runs on Ubuntu, macOS and Windows with Node 22 and 24. See `docs/acceptance-checklist.md` for the manual acceptance

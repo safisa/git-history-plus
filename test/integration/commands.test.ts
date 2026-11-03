@@ -21,7 +21,7 @@ const norepo = process.env.GHP_NOREPO!;
 const file = vscode.Uri.file(join(repoDir, 'alpha.txt'));
 
 async function api(): Promise<TestApi> {
-  const ext = vscode.extensions.getExtension('safisa.git-history-plus')!;
+  const ext = vscode.extensions.getExtension('safisa.githistory-plus')!;
   return (await ext.activate()) as TestApi;
 }
 
@@ -50,7 +50,7 @@ suite('Git History Plus commands', () => {
   test('activates from commands alone and registers all commands', async () => {
     // Executing a contributed command must activate the extension even before startup has finished.
     await vscode.commands.executeCommand('gitHistoryPlus.refresh');
-    assert.ok(vscode.extensions.getExtension('safisa.git-history-plus')!.isActive);
+    assert.ok(vscode.extensions.getExtension('safisa.githistory-plus')!.isActive);
     const all = await vscode.commands.getCommands(true);
     for (const c of [
       'gitHistoryPlus.viewHistory',

@@ -41,6 +41,6 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.node == 22
         uses: actions/upload-artifact@v4
         with:
-          name: git-history-plus-vsix
+          name: githistory-plus-vsix
           path: '*.vsix'
           if-no-files-found: error

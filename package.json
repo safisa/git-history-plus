@@ -1,5 +1,5 @@
 {
-  "name": "git-history-plus",
+  "name": "githistory-plus",
   "displayName": "Git History Plus",
   "description": "Git log, file, folder and line history with a commit graph, uncommitted changes, branch lookups and compare. A rebuilt and extended fork of Git History.",
   "version": "0.1.0",

@@ -15,7 +15,8 @@ First release of Git History Plus, a maintained fork of Git History (`donjayaman
   text only, and the extension validates every message from the view (refs and hashes included).
 - Destructive actions use the editor's native modal confirmation.
 - No telemetry. Avatars are off by default.
-- New namespace: commands and settings are `gitHistoryPlus.*`; the content scheme is `git-history-plus`.
+- New identity: the extension ID is `safisa.githistory-plus`; commands and settings are `gitHistoryPlus.*`; the content
+  scheme is `git-history-plus`.
 
 ### New UI
 

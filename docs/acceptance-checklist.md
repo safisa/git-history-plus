@@ -2,9 +2,9 @@
 
 How to use this:
 
-- Run the **VS Code (macOS)** column after `code --install-extension git-history-plus-0.1.0.vsix`.
+- Run the **VS Code (macOS)** column after `code --install-extension githistory-plus-0.1.0.vsix`.
 - Run the **Theia** column in a Theia 1.76+ application with the `.vsix` extracted into its `plugins/` folder (for
-  example `unzip git-history-plus-0.1.0.vsix -d plugins/safisa.git-history-plus/`). Do not point `theiaPlugins` at a
+  example `unzip githistory-plus-0.1.0.vsix -d plugins/safisa.githistory-plus/`). Do not point `theiaPlugins` at a
   local `.vsix`: `theia download:plugins` only fetches http(s) URLs, so a `file:` entry is not supported.
 - Items marked `(auto: <file>)` are already proven by an automated test, which does not replace the manual check for
   anything visual. Items with no marker are **needs human**: a person must click through them in the real UI.
@@ -39,7 +39,7 @@ Theia with a host name that resolves for subdomains (`localhost`, not `127.0.0.1
 | #   | Item                                                                      | VS Code (macOS) | Theia  |
 | --- | ------------------------------------------------------------------------- | --------------- | ------ |
 | A   | **Install and activation**                                                |                 |        |
-| A1  | `.vsix` installs; extension id is `safisa.git-history-plus`               | [ ]             | [ ]    |
+| A1  | `.vsix` installs; extension id is `safisa.githistory-plus`               | [ ]             | [ ]    |
 | A2  | Activates from any command alone, all commands registered (auto: test/integration/commands.test.ts) | [ ] | [ ] |
 | A3  | No telemetry or network traffic with default settings (check devtools/network) | [ ]        | [ ]    |
 | B   | **Job 1: file history (G2.1)**                                            |                 |        |

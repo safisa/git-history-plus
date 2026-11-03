@@ -1,5 +1,5 @@
 export const NS = 'gitHistoryPlus';
-export const EXT_ID = 'safisa.git-history-plus';
+export const EXT_ID = 'safisa.githistory-plus';
 export const SCHEME = 'git-history-plus';
 
 export const VIEW_IDS = {

@@ -50,7 +50,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: vsix
-          path: git-history-plus-*.vsix
+          path: githistory-plus-*.vsix
           if-no-files-found: error
 
   # Each store publishes the same .vsix in its own job: a failure in one doesn't block the other,
@@ -74,7 +74,7 @@ jobs:
         with:
           node-version: 22
       # --skip-duplicate: a version already there (the hand-published first one, or a re-run) is not an error.
-      - run: npx --yes ovsx@1.3.0 publish --trusted-publishing --skip-duplicate --packagePath git-history-plus-*.vsix
+      - run: npx --yes ovsx@1.3.0 publish --trusted-publishing --skip-duplicate --packagePath githistory-plus-*.vsix
 
   marketplace:
     name: VS Code Marketplace
@@ -91,4 +91,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npx --yes @vscode/vsce@4.1.0 publish --oidc --skip-duplicate --packagePath git-history-plus-*.vsix
+      - run: npx --yes @vscode/vsce@4.1.0 publish --oidc --skip-duplicate --packagePath githistory-plus-*.vsix
