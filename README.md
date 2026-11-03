@@ -1,9 +1,9 @@
-# Git History Plus
+# GitHistory Plus
 
 Git log, file, folder and line history with a commit graph, uncommitted changes, branch and tag comparison and
 commit actions, in VS Code and Eclipse Theia.
 
-Git History Plus started as a fork of [Git History](https://github.com/DonJayamanne/gitHistoryVSCode)
+GitHistory Plus started as a fork of [Git History](https://github.com/DonJayamanne/gitHistoryVSCode)
 (`donjayamanne.githistory`) by DonJayamanne, which is no longer maintained. It is more than a modernized copy:
 
 - **Rebuilt from scratch** on a current, secure toolchain: no known vulnerabilities in what it ships (the original's
@@ -133,7 +133,7 @@ npm run typecheck
 npm run test:unit
 npm run test:integration  # needs a display; downloads a VS Code build
 npm run audit:prod
-npm run package           # produces githistory-plus-0.1.0.vsix
+npm run package           # produces githistory-plus-0.1.1.vsix
 ```
 
 CI runs on Ubuntu, macOS and Windows with Node 22 and 24. See `docs/acceptance-checklist.md` for the manual acceptance

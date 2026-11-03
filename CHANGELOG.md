@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- Published as **GitHistory Plus** (`safisa.githistory-plus`): the VS Code Marketplace already reserves the name
+  `git-history-plus` and the display name "Git History Plus". Commands, settings and in-product labels are unchanged.
+
 ## 0.1.0
 
 First release of Git History Plus, a maintained fork of Git History (`donjayamanne.githistory`) 0.6.20.

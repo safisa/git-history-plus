@@ -1,8 +1,8 @@
 {
   "name": "githistory-plus",
-  "displayName": "Git History Plus",
+  "displayName": "GitHistory Plus",
   "description": "Git log, file, folder and line history with a commit graph, uncommitted changes, branch lookups and compare. A rebuilt and extended fork of Git History.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "safisa",
   "license": "MIT",
   "private": true,
