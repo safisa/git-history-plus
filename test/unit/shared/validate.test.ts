@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isHash, isSafeRefName, validateRequest } from '../../../src/shared/validate';
+import { LOG_COUNT_MAX } from '../../../src/shared/protocol';
 
 describe('isHash', () => {
   it('accepts 4..64 lowercase hex', () => {
@@ -288,6 +289,16 @@ describe('validateRequest', () => {
     expect(log({ ...q, lines: { path: '', start: 1, end: 3 } })).toBeUndefined();
     expect(log({ ...q, lines: { path: 'a', start: 1, end: 3, x: 1 } })).toBeUndefined();
     expect(log(null)).toBeUndefined();
+  });
+  it('validates the log count', () => {
+    const log = (count: unknown) => validateRequest({ id: 1, type: 'log', query: q, count });
+    expect(log(undefined)).toEqual({ id: 1, type: 'log', query: q });
+    expect(log(1)).toEqual({ id: 1, type: 'log', query: q, count: 1 });
+    expect(log(LOG_COUNT_MAX)).toEqual({ id: 1, type: 'log', query: q, count: LOG_COUNT_MAX });
+    expect(log(LOG_COUNT_MAX + 1)).toBeUndefined();
+    expect(log(0)).toBeUndefined();
+    expect(log(2.5)).toBeUndefined();
+    expect(log('10')).toBeUndefined();
   });
   it('rejects a __proto__ key in a JSON-parsed query', () => {
     const msg = JSON.parse(

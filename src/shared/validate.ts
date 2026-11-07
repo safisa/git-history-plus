@@ -2,6 +2,7 @@ import {
   COLUMN_MAX_WIDTH,
   COLUMN_MIN_WIDTH,
   COLUMNS,
+  LOG_COUNT_MAX,
   PANEL_MAX_WIDTH,
   PANEL_MIN_WIDTH,
   type Request,
@@ -235,7 +236,9 @@ export function validateRequest(msg: unknown): Request | undefined {
       return isHash(msg.hash) ? { id, type: msg.type, hash: msg.hash } : undefined;
     case 'log': {
       const query = validateQuery(msg.query);
-      return query ? { id, type: 'log', query } : undefined;
+      if (!query) return undefined;
+      if (msg.count === undefined) return { id, type: 'log', query };
+      return inRange(msg.count, 1, LOG_COUNT_MAX) ? { id, type: 'log', query, count: msg.count } : undefined;
     }
     case 'openDiff': {
       const file = validateFile(msg.file);

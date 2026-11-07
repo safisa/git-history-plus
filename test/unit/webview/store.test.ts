@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Push } from '../../../src/shared/protocol';
+import { LOG_COUNT_MAX, type Push } from '../../../src/shared/protocol';
 import type { GraphCarry, LogPage, LogQuery, Ref } from '../../../src/shared/types';
 import { createStore, type RequestBody } from '../../../webview/store';
 import { SETTINGS, linearRow, makeCommit, makeRef } from './helpers';
@@ -115,12 +115,9 @@ describe('store', () => {
     await h.answer(page(2, 2, true, carry(11)));
     h.store.actions.select(makeCommit(3).hash); // on the second page
     h.push({ type: 'refresh' });
-    const first = await h.answer(page(0, 2, true, carry(20)));
-    expect(first).toEqual({ type: 'log', query: QUERY });
-    // The old list stays on screen until the reload has caught up with it.
-    expect(h.store.getState().commits).toHaveLength(4);
-    const second = await h.answer(page(2, 2, true, carry(21)));
-    expect(second).toEqual({ type: 'log', query: { ...QUERY, skip: 2, graphCarry: carry(20) } });
+    // Everything that was listed is asked for at once, not page by page.
+    const first = await h.answer(page(0, 4, true, carry(21)));
+    expect(first).toEqual({ type: 'log', query: QUERY, count: 4 });
     expect(h.pending).toHaveLength(0);
     const s = h.store.getState();
     expect(s.commits.map((c) => c.hash)).toEqual([0, 1, 2, 3].map((i) => makeCommit(i).hash));
@@ -265,8 +262,43 @@ describe('store', () => {
     await h.answer(page(0, 2, false));
     void h.store.actions.refreshRepo();
     expect(await h.answer(undefined as never)).toEqual({ type: 'refreshRepo' });
-    expect(await h.answer(page(0, 1, false))).toEqual({ type: 'log', query: QUERY });
+    expect(await h.answer(page(0, 1, false))).toEqual({ type: 'log', query: QUERY, count: 2 });
     expect(h.refsCalls).toHaveLength(2);
+  });
+
+  it('on refresh asks again for whatever a short answer left out, keeping the old list meanwhile', async () => {
+    const h = harness();
+    h.init();
+    await h.answer(page(0, 2, true, carry(10)));
+    void h.store.actions.loadMore();
+    await h.answer(page(2, 2, true, carry(11)));
+    h.store.actions.refresh();
+    expect(await h.answer(page(0, 3, true, carry(20)))).toEqual({ type: 'log', query: QUERY, count: 4 });
+    // The old list stays on screen until the reload has caught up with it.
+    expect(h.store.getState().commits.map((c) => c.hash)).toEqual(
+      [0, 1, 2, 3].map((i) => makeCommit(i).hash),
+    );
+    expect(await h.answer(page(3, 2, true, carry(21)))).toEqual({
+      type: 'log',
+      query: { ...QUERY, skip: 3, graphCarry: carry(20) },
+      count: 1,
+    });
+    expect(h.pending).toHaveLength(0);
+    expect(h.store.getState().commits).toHaveLength(5);
+    expect(h.store.getState().carry).toEqual(carry(21));
+  });
+
+  it('on refresh never asks for more than LOG_COUNT_MAX commits in one request', async () => {
+    const h = harness();
+    h.init();
+    await h.answer(page(0, LOG_COUNT_MAX + 10, true));
+    h.store.actions.refresh();
+    expect(await h.answer(page(0, LOG_COUNT_MAX, true, carry(1)))).toMatchObject({ count: LOG_COUNT_MAX });
+    expect(await h.answer(page(LOG_COUNT_MAX, 10, false))).toMatchObject({
+      query: { skip: LOG_COUNT_MAX },
+      count: 10,
+    });
+    expect(h.store.getState().commits).toHaveLength(LOG_COUNT_MAX + 10);
   });
 
   it('send reports a failed fire-and-forget request as a dismissible notice', async () => {

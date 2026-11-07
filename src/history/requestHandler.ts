@@ -54,7 +54,8 @@ export async function handleRequest(req: Request, ctx: HandlerCtx): Promise<unkn
     throw new Error('Uncommitted changes are not a commit');
   switch (req.type) {
     case 'log': {
-      const query = { ...req.query, pageSize: settings.pageSize };
+      // A refresh asks for everything it listed in one go; a page is never smaller than the setting.
+      const query = { ...req.query, pageSize: Math.max(settings.pageSize, req.count ?? 0) };
       if (query.maxCount === undefined && settings.defaultMaxCount > 0)
         query.maxCount = settings.defaultMaxCount;
       return svc.log(query, settings.includeRemoteBranches);
