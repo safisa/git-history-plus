@@ -211,8 +211,9 @@ export function createStore(deps: StoreDeps): Store {
   }
 
   /**
-   * Loads page one of the current query or, for a refresh, at least `keep` commits again: asked for
-   * in one request (several only past LOG_COUNT_MAX), as paging there would re-walk the history
+   * Loads page one of the current query or, for a refresh, at least `keep` commits again (real ones:
+   * the uncommitted row comes on top of what is asked for), in one request (several only past
+   * LOG_COUNT_MAX), as paging there would re-walk the history
    * once per page. The old list stays on screen until the new one is complete; the selection
    * survives when its commit is anywhere in the reloaded set.
    */
@@ -226,11 +227,11 @@ export function createStore(deps: StoreDeps): Store {
       let page = await deps.request<LogPage>({ type: 'log', query, ...count(0) });
       if (gen !== generation) return;
       let { commits, graph, carry, hasMore } = page;
-      while (page.exactHash === undefined && hasMore && commits.length < keep) {
+      while (page.exactHash === undefined && hasMore && loaded(commits) < keep) {
         page = await deps.request<LogPage>({
           type: 'log',
           query: { ...query, skip: loaded(commits), graphCarry: carry },
-          ...count(commits.length),
+          ...count(loaded(commits)),
         });
         if (gen !== generation) return;
         if (page.commits.length === 0) break; // never spin on an empty page
@@ -360,7 +361,7 @@ export function createStore(deps: StoreDeps): Store {
     containingGeneration++;
     set({ details: {}, detailsErrors: {}, containing: {} });
     loadRefs();
-    const page = loadFirst(state.commits.length);
+    const page = loadFirst(loaded(state.commits));
     if (wanted !== undefined) void loadDetails(wanted);
     return page;
   }
