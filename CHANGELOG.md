@@ -1,27 +1,27 @@
 # Changelog
 
+## 1.0.0
+
+First stable release. Commands and settings are unchanged.
+
+- The history view opens and refreshes faster on large repositories: a refresh reloads the commits you had scrolled
+  through in one go instead of page by page.
+
 ## 0.1.1
 
-- Published as **GitHistory Plus** (`safisa.githistory-plus`): the VS Code Marketplace already reserves the name
-  `git-history-plus` and the display name "Git History Plus". Commands, settings and in-product labels are unchanged.
+- Renamed to **GitHistory Plus** (`safisa.githistory-plus`). Commands and settings are unchanged.
 
 ## 0.1.0
 
-First release of Git History Plus, a maintained fork of Git History (`donjayamanne.githistory`) 0.6.20.
+First release of GitHistory Plus, a maintained, rebuilt successor to Git History (`donjayamanne.githistory`) 0.6.20.
 
 ### Rebuilt
 
-- Fresh toolchain: TypeScript 5 (strict), esbuild, Vitest, ESLint and Prettier. The upstream build stack (webpack 4,
-  Babel 6, Storybook 3, Jest 25, React 16, Bootstrap 3, Redux) and its 234 audit findings are gone.
-- Runtime dependencies are `react`, `react-dom`, `@tanstack/react-virtual` and `@vscode/codicons`, all bundled into
-  the webview. `npm audit --omit=dev` reports 0 vulnerabilities.
-- Git is run with `execFile` and argument arrays, never a shell; paths follow `--`.
-- The history view runs under a strict CSP (`default-src 'none'`, nonce-only scripts), renders repository data as
-  text only, and the extension validates every message from the view (refs and hashes included).
-- Destructive actions use the editor's native modal confirmation.
+- A modern, secure codebase with no known vulnerabilities in what it ships.
 - No telemetry. Avatars are off by default.
-- New identity: the extension ID is `safisa.githistory-plus`; commands and settings are `gitHistoryPlus.*`; the content
-  scheme is `git-history-plus`.
+- The history view runs under a strict content security policy and shows repository data as text only.
+- Destructive actions ask for confirmation in a native dialog.
+- Commands and settings are `gitHistoryPlus.*`.
 
 ### New UI
 
@@ -33,37 +33,46 @@ First release of Git History Plus, a maintained fork of Git History (`donjayaman
 - In file and line history the tracked file is listed first in the details ("This file"), with the commit's other
   files folded away. A click selects a commit; double-click, Enter or "Open Changes" in its menu opens that
   version's diff with previous/next stepping.
-- Stepping through versions reuses one diff tab per file history (the next version replaces the previous one in
-  place, whatever the preview-editor setting); a pinned tab is kept.
-- The history tab and the Commits / Compare Commits views have icons, so they stay visible when docked in a side bar
-  (Theia shows only the icon there).
-- Past versions open read-only in both VS Code and Theia, served by a read-only file system with an explanatory
-  message; binary files (e.g. images) are served as-is so the editor can preview them.
+- Stepping through versions reuses one diff tab per file history; a pinned tab is kept.
+- The history tab and the Commits / Compare Commits views have icons, so they stay recognizable when docked in a side
+  bar.
+- Past versions open read-only; binary files such as images open in the editor's preview.
 
 ### Fixed
 
-- A history view that was told to refresh before it had loaded could list the whole repository instead of the
-  file or folder it was opened for.
-- Dates use the editor language, with a `dateFormat` setting (#106, #740, #751).
-- Symlinked folders and Windows/remote paths resolve to the right repository (#786, #559).
-- The all-branches view refreshes when repository state changes (#734, #735).
-- Compare shows added, deleted and renamed files (#670, #746).
-- Parser rewrite removes the `reading 'trim'` and file-history webview errors (#713, #684).
-- Repository discovery no longer fails to find `.git` (#373).
+Issues reported against the original Git History:
+
+- Dates use the editor language, with a `dateFormat` setting
+  ([#106](https://github.com/DonJayamanne/gitHistoryVSCode/issues/106),
+  [#740](https://github.com/DonJayamanne/gitHistoryVSCode/issues/740),
+  [#751](https://github.com/DonJayamanne/gitHistoryVSCode/issues/751)).
+- Symlinked folders and Windows/remote paths resolve to the right repository
+  ([#786](https://github.com/DonJayamanne/gitHistoryVSCode/issues/786),
+  [#559](https://github.com/DonJayamanne/gitHistoryVSCode/issues/559)).
+- The all-branches view refreshes when repository state changes
+  ([#734](https://github.com/DonJayamanne/gitHistoryVSCode/issues/734),
+  [#735](https://github.com/DonJayamanne/gitHistoryVSCode/issues/735)).
+- Compare shows added, deleted and renamed files
+  ([#670](https://github.com/DonJayamanne/gitHistoryVSCode/issues/670),
+  [#746](https://github.com/DonJayamanne/gitHistoryVSCode/issues/746)).
+- No more `reading 'trim'` and file-history view errors
+  ([#713](https://github.com/DonJayamanne/gitHistoryVSCode/issues/713),
+  [#684](https://github.com/DonJayamanne/gitHistoryVSCode/issues/684)).
+- Repository discovery no longer fails to find `.git`
+  ([#373](https://github.com/DonJayamanne/gitHistoryVSCode/issues/373)).
 
 ### Added
 
 - Search by commit hash and by file path.
 - Previous / Next version buttons when stepping through a file's history.
 - Date range and max-count filter.
-- `.mailmap` support (#676).
-- Compare... toolbar button to compare any two branches, tags or commits (#739).
+- `.mailmap` support ([#676](https://github.com/DonJayamanne/gitHistoryVSCode/issues/676)).
+- Compare… toolbar button to compare any two branches, tags or commits
+  ([#739](https://github.com/DonJayamanne/gitHistoryVSCode/issues/739)).
 - Folder history: right-click a folder in the Explorer for every commit that touched anything under it.
 - Compare File with Branch or Tag…: diffs the file as it is in a picked branch, tag or commit against the working
   copy (editor and Explorer context menus, editor title menu, Command Palette).
-- Fetch button: fetches all remotes with prune (through the built-in Git extension, so its credential prompts work;
-  without it, git runs directly and the progress notification can cancel it) and refreshes the open views of that
-  repository.
+- Fetch button: fetches all remotes with prune and refreshes the open views of that repository.
 - "Me" in the author filter: the configured `user.name` / `user.email`, as `.mailmap` maps them.
 - `issueLinks` setting: turns issue keys such as `ABC-123` in commit messages into links (http and https only).
 - Parent hashes in the commit details link to those commits, and a Go to HEAD button selects the HEAD commit; a
@@ -83,16 +92,11 @@ First release of Git History Plus, a maintained fork of Git History (`donjayaman
 - A click on a changed file opens its diff in a preview tab (the next one replaces it); a double-click, or
   Open Changes in its menu, keeps the tab open, as in VS Code's own lists.
 - A status bar button and `ctrl+alt+h` open the repository history (`showStatusBarItem` setting, on by default).
-  The extension now activates once startup has finished, so the button is there from the start.
 - Settings `dateFormat`, `avatars` and `defaultMaxCount`; changes apply to open panels. With `avatars` on, author
-  avatars are fetched by the extension host and shown in the list and the details.
-- Runs in Eclipse Theia 1.76 as well as desktop VS Code (checked in a stock Theia 1.76 browser app).
+  avatars are shown in the list and the details.
+- Runs in Eclipse Theia 1.76 as well as desktop VS Code.
 
 ### Removed settings
 
 - `sideBySide`, `showFileHistorySplit` and `avatarCacheExpiration` (replaced by the adaptive layout, file-history mode
   and the `avatars` setting). Old values are not migrated.
-
-### Known gaps (deferred to 0.2)
-
-- There is no settings menu in the toolbar yet; use the `gitHistoryPlus.*` settings.
