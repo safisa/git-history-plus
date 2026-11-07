@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LOG_COUNT_MAX, type Push } from '../../../src/shared/protocol';
-import type { GraphCarry, LogPage, LogQuery, Ref } from '../../../src/shared/types';
+import { WORKTREE, type GraphCarry, type LogPage, type LogQuery, type Ref } from '../../../src/shared/types';
 import { createStore, type RequestBody } from '../../../webview/store';
 import { SETTINGS, linearRow, makeCommit, makeRef } from './helpers';
 
@@ -286,6 +286,28 @@ describe('store', () => {
     expect(h.pending).toHaveLength(0);
     expect(h.store.getState().commits).toHaveLength(5);
     expect(h.store.getState().carry).toEqual(carry(21));
+  });
+
+  it('on refresh counts commits, not the uncommitted row the extension adds on top', async () => {
+    const h = harness();
+    h.init();
+    const withRow = (p: LogPage): LogPage => ({
+      ...p,
+      commits: [makeCommit(99, { hash: WORKTREE, subject: 'Uncommitted changes (1 file)' }), ...p.commits],
+      graph: [linearRow(), ...p.graph],
+    });
+    await h.answer(withRow(page(0, 2, true, carry(10))));
+    void h.store.actions.loadMore();
+    expect(await h.answer(page(2, 2, true, carry(11)))).toMatchObject({ query: { skip: 2 } });
+    expect(h.store.getState().commits).toHaveLength(5);
+    h.store.actions.refresh();
+    expect(await h.answer(withRow(page(0, 4, true, carry(20))))).toEqual({
+      type: 'log',
+      query: QUERY,
+      count: 4,
+    });
+    expect(h.pending).toHaveLength(0);
+    expect(h.store.getState().commits).toHaveLength(5);
   });
 
   it('on refresh never asks for more than LOG_COUNT_MAX commits in one request', async () => {
