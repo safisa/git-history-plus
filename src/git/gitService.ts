@@ -104,16 +104,19 @@ export class GitService {
   /**
    * The uncommitted changes (under `path` if given): HEAD against the working tree, untracked files
    * as added. The row's file count and its details both come from here, so they always agree.
+   * `stats: false` skips the line counts (--numstat), for callers that only need the files.
    */
-  async worktreeFiles(path?: string): Promise<FileChange[]> {
+  async worktreeFiles(path?: string, opts: { stats?: boolean } = {}): Promise<FileChange[]> {
     const base = ['--no-optional-locks', 'diff', '-z', '-M', '--no-color'];
     const spec = ['--', ...(path ? [path] : [])];
+    const withStats = opts.stats !== false;
     const [names, stats, untracked] = await Promise.all([
       this.run([...base, '--name-status', '--end-of-options', 'HEAD', ...spec]),
-      this.run([...base, '--numstat', '--end-of-options', 'HEAD', ...spec]),
+      withStats ? this.run([...base, '--numstat', '--end-of-options', 'HEAD', ...spec]) : '',
       this.run(['--no-optional-locks', 'ls-files', '--others', '--exclude-standard', '-z', ...spec]),
     ]);
-    const files = mergeStats(parseNameStatus(names), parseNumstat(stats));
+    const changes = parseNameStatus(names);
+    const files = withStats ? mergeStats(changes, parseNumstat(stats)) : changes;
     for (const path of untracked.split('\0')) if (path) files.push({ status: 'A', path });
     return files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
   }
@@ -167,18 +170,23 @@ export class GitService {
     return commit as Commit;
   }
 
-  async log(q: LogQuery, includeRemotes: boolean): Promise<LogPage> {
-    let head: Hash | undefined;
-    if (q.branch.kind !== 'ref') {
-      try {
-        head = (await this.run(['rev-parse', '--verify', '--quiet', 'HEAD'])).trim();
-      } catch (e) {
-        if (isMissingRev(e)) return { commits: [], graph: [], carry: EMPTY_CARRY(), hasMore: false };
-        throw e;
-      }
+  /** HEAD's commit, or null while HEAD is unborn (a repository without commits). */
+  private async headOrUnborn(): Promise<Hash | null> {
+    try {
+      return (await this.run(['rev-parse', '--verify', '--quiet', 'HEAD'])).trim();
+    } catch (e) {
+      if (isMissingRev(e)) return null;
+      throw e;
     }
+  }
+
+  async log(q: LogQuery, includeRemotes: boolean): Promise<LogPage> {
+    const empty = (): LogPage => ({ commits: [], graph: [], carry: EMPTY_CARRY(), hasMore: false });
+    // HEAD is only needed for the unborn check and the uncommitted row; a picked ref needs neither.
+    const headP = q.branch.kind === 'ref' ? Promise.resolve(undefined) : this.headOrUnborn();
 
     if (q.text && HASH_LIKE.test(q.text)) {
+      if ((await headP) === null) return empty();
       const full = await this.resolveCommit(q.text);
       if (full) {
         const commit = await this.loadCommit(full);
@@ -187,9 +195,28 @@ export class GitService {
       }
     }
 
+    // The independent git calls start together, so the slowest one (usually the untracked-file scan
+    // behind the uncommitted row) sets the page's latency instead of the sum of all of them.
     const args = buildLogArgs(q, { includeRemotes });
     args.splice(args.indexOf('log') + 1, 0, '--no-color');
-    const out = await this.run(args);
+    const outP = this.run(args);
+    const refsP = this.refs();
+    // On top, uncommitted changes (under the path, in file and folder history) as a pseudo commit.
+    // Only their count is needed here, so no --numstat (the details compute that). A failure here
+    // (a broken submodule, say) only costs the row, never the history.
+    const changedP = showsWorktree(q)
+      ? this.worktreeFiles(q.path, { stats: false }).then(
+          (files) => files.length,
+          () => 0,
+        )
+      : Promise.resolve(0);
+    // What an early return below abandons must not surface as an unhandled rejection.
+    outP.catch(() => undefined);
+    refsP.catch(() => undefined);
+
+    const head = await headP;
+    if (head === null) return empty(); // `git log HEAD` fails on an unborn HEAD; dropped above
+    const out = await outP;
     const parsed = parseLog(out);
     if (out.trim() !== '' && parsed.length === 0) {
       throw new Error('git log produced output that could not be parsed into commits');
@@ -197,9 +224,7 @@ export class GitService {
     const hasMore =
       parsed.length > q.pageSize && (q.maxCount === undefined || q.skip + q.pageSize < q.maxCount);
     const commits = await this.attachRefs(parsed.slice(0, q.pageSize));
-    // On top, uncommitted changes (under the path, in file and folder history) as a pseudo commit.
-    // A failure here (a broken submodule, say) only costs the row, never the history.
-    const changed = head && showsWorktree(q) ? (await this.worktreeFiles(q.path).catch(() => [])).length : 0;
+    const changed = head ? await changedP : 0;
     if (changed > 0) commits.unshift(worktreeCommit(head, changed));
     // A filtered list hides the commits between its rows, so lanes can't be drawn: use a timeline.
     const filtered = !!(q.path || q.lines || q.text || q.author);

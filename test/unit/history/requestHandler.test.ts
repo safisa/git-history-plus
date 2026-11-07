@@ -68,6 +68,16 @@ describe('handleRequest', () => {
     expect(page.graph.length).toBe(page.commits.length);
     expect(page.hasMore).toBe(true);
   });
+  it('log with a count answers at least that many commits, and never fewer than a page', async () => {
+    const query = { branch: { kind: 'current' } as const, skip: 0, pageSize: 2 };
+    const all = (await handleRequest({ id: 1, type: 'log', query, count: 3 }, ctx())) as LogPage;
+    expect(all.commits.map((c) => c.subject)).toEqual(['three', 'two', 'one']);
+    expect(all.graph).toHaveLength(3);
+    expect(all.hasMore).toBe(false);
+    const small = (await handleRequest({ id: 2, type: 'log', query, count: 1 }, ctx())) as LogPage;
+    expect(small.commits).toHaveLength(2);
+    expect(small.hasMore).toBe(true);
+  });
   it('log applies defaultMaxCount only when the query has none', async () => {
     const q = { branch: { kind: 'current' } as const, skip: 0, pageSize: 100 };
     const a = (await handleRequest(

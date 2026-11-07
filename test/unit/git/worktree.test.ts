@@ -51,6 +51,18 @@ describe('the uncommitted changes row', () => {
     expect(page.graph[0]!.lane).toBe(page.graph[1]!.lane);
   });
 
+  it('counts its files without asking git for line counts, while the details still have them', async () => {
+    const { r, svc } = await setup();
+    await writeFile(join(r.dir, 'a.txt'), '1\n2\n');
+    await writeFile(join(r.dir, 'new.txt'), 'new\n');
+    const run = vi.spyOn(svc, 'run');
+    const page = await svc.log(q(), false);
+    expect(page.commits[0]!.subject).toBe('Uncommitted changes (2 files)');
+    expect(run.mock.calls.some(([args]) => args.includes('--numstat'))).toBe(false);
+    const d = await svc.details(WORKTREE);
+    expect(d.files.find((f) => f.path === 'a.txt')).toMatchObject({ additions: 1, deletions: 0 });
+  });
+
   it('only on page one of an unfiltered log of HEAD; a path keeps it to changes under that path', async () => {
     const { r, svc } = await setup();
     await writeFile(join(r.dir, 'a.txt'), 'changed\n');

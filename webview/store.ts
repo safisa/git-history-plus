@@ -1,5 +1,11 @@
 import { useSyncExternalStore } from 'react';
-import type { HistoryMode, Push, ViewLayout, ViewSettings } from '../src/shared/protocol';
+import {
+  LOG_COUNT_MAX,
+  type HistoryMode,
+  type Push,
+  type ViewLayout,
+  type ViewSettings,
+} from '../src/shared/protocol';
 import type {
   Commit,
   CommitDetails,
@@ -205,22 +211,26 @@ export function createStore(deps: StoreDeps): Store {
   }
 
   /**
-   * Loads page one of the current query, then (for a refresh) further pages until at least `keep`
-   * commits are loaded again. The old list stays on screen until the new one is complete; the
-   * selection survives when its commit is anywhere in the reloaded set.
+   * Loads page one of the current query or, for a refresh, at least `keep` commits again: asked for
+   * in one request (several only past LOG_COUNT_MAX), as paging there would re-walk the history
+   * once per page. The old list stays on screen until the new one is complete; the selection
+   * survives when its commit is anywhere in the reloaded set.
    */
   async function loadFirst(keep = 0): Promise<void> {
     const gen = ++generation;
     set({ loading: true, error: undefined });
     try {
       const query = firstPage(state.query);
-      let page = await deps.request<LogPage>({ type: 'log', query });
+      /** Asks for the rows still missing; the extension never answers with less than a page. */
+      const count = (have: number) => (keep > have ? { count: Math.min(keep - have, LOG_COUNT_MAX) } : {});
+      let page = await deps.request<LogPage>({ type: 'log', query, ...count(0) });
       if (gen !== generation) return;
       let { commits, graph, carry, hasMore } = page;
       while (page.exactHash === undefined && hasMore && commits.length < keep) {
         page = await deps.request<LogPage>({
           type: 'log',
           query: { ...query, skip: loaded(commits), graphCarry: carry },
+          ...count(commits.length),
         });
         if (gen !== generation) return;
         if (page.commits.length === 0) break; // never spin on an empty page

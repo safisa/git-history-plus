@@ -8,6 +8,11 @@ export type Column = 'author' | 'date' | 'hash';
 export const COLUMNS: readonly Column[] = ['author', 'date', 'hash'];
 export const COLUMN_MIN_WIDTH = 40;
 export const COLUMN_MAX_WIDTH = 400;
+/**
+ * The most commits one `log` request may ask for with `count` (a refresh reloading what was
+ * listed); a longer list is reloaded in several requests.
+ */
+export const LOG_COUNT_MAX = 5000;
 
 /** View layout the user chose, remembered for every history view (the extension's global state). */
 export interface ViewLayout {
@@ -22,7 +27,7 @@ export type HistoryMode = 'repo' | 'file' | 'folder' | 'line';
 
 // Every message carries a numeric id; responses echo it.
 export type Request =
-  | { id: number; type: 'log'; query: LogQuery }
+  | { id: number; type: 'log'; query: LogQuery; count?: number } // count: at least this many (refresh), else a page
   | { id: number; type: 'details'; hash: Hash; path?: string } // path: scopes uncommitted changes
   | { id: number; type: 'refs' }
   | { id: number; type: 'authors' }

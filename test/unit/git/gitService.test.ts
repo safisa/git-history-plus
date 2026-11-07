@@ -56,6 +56,20 @@ describe('GitService.log', () => {
     expect(page).toMatchObject({ commits: [], graph: [], hasMore: false });
   });
 
+  it('returns an empty page for an empty repo with uncommitted files, whatever the query', async () => {
+    const r = await repo();
+    await writeFile(join(r.dir, 'new.txt'), 'x\n');
+    const s = svc(r);
+    for (const over of [
+      {},
+      { branch: { kind: 'all' } as const },
+      { text: 'abcdef12' },
+      { path: 'new.txt' },
+    ]) {
+      expect(await s.log(q(over), false)).toMatchObject({ commits: [], graph: [], hasMore: false });
+    }
+  });
+
   it('rejects on a non-repo directory', async () => {
     const notRepo = await mkdtemp(join(tmpdir(), 'ghp-norepo-'));
     extra.push(notRepo);
