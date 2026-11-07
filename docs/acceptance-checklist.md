@@ -2,9 +2,9 @@
 
 How to use this:
 
-- Run the **VS Code (macOS)** column after `code --install-extension githistory-plus-0.1.1.vsix`.
+- Run the **VS Code (macOS)** column after `code --install-extension githistory-plus-1.0.0.vsix`.
 - Run the **Theia** column in a Theia 1.76+ application with the `.vsix` extracted into its `plugins/` folder (for
-  example `unzip githistory-plus-0.1.1.vsix -d plugins/safisa.githistory-plus/`). Do not point `theiaPlugins` at a
+  example `unzip githistory-plus-1.0.0.vsix -d plugins/safisa.githistory-plus/`). Do not point `theiaPlugins` at a
   local `.vsix`: `theia download:plugins` only fetches http(s) URLs, so a `file:` entry is not supported.
 - Items marked `(auto: <file>)` are already proven by an automated test, which does not replace the manual check for
   anything visual. Items with no marker are **needs human**: a person must click through them in the real UI.

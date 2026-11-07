@@ -2,7 +2,7 @@
   "name": "githistory-plus",
   "displayName": "GitHistory Plus",
   "description": "Git log, file, folder and line history with a commit graph, uncommitted changes, branch lookups and compare. A rebuilt and extended fork of Git History.",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "publisher": "safisa",
   "license": "MIT",
   "private": true,
@@ -76,7 +76,7 @@
   },
   "contributes": {
     "configuration": {
-      "title": "Git History Plus",
+      "title": "GitHistory Plus",
       "properties": {
         "gitHistoryPlus.alwaysPromptRepositoryPicker": {
           "type": "boolean",
@@ -91,7 +91,7 @@
         "gitHistoryPlus.showEditorTitleMenuBarIcons": {
           "type": "boolean",
           "default": true,
-          "description": "Show the Git History Plus icons in the editor title menu bar."
+          "description": "Show the GitHistory Plus icons in the editor title menu bar."
         },
         "gitHistoryPlus.editorTitleButtonOpenRepo": {
           "type": "boolean",
@@ -123,7 +123,7 @@
             "Info",
             "Debug"
           ],
-          "description": "Verbosity of the Git History Plus output channel."
+          "description": "Verbosity of the GitHistory Plus output channel."
         },
         "gitHistoryPlus.sourceCodeProviderIntegrationLocation": {
           "type": "string",

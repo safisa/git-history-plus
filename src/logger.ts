@@ -15,7 +15,7 @@ export function setLogLevel(l: LogLevel): void {
 
 function write(at: Severity, message: string, err?: unknown): void {
   if (SEVERITY[at] > THRESHOLD[level]) return;
-  channel ??= vscode.window.createOutputChannel('Git History Plus');
+  channel ??= vscode.window.createOutputChannel('GitHistory Plus');
   const detail =
     err === undefined ? '' : ` ${err instanceof Error ? (err.stack ?? err.message) : String(err)}`;
   channel.appendLine(`[${new Date().toISOString()}] [${at}] ${message}${detail}`);
