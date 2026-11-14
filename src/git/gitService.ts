@@ -56,6 +56,8 @@ const showsWorktree = (q: LogQuery) =>
 
 /** At most this many branch and tag names come back from `containing` (the counts are complete). */
 const CONTAINING_MAX = 50;
+/** `v1.9` before `v1.10`, `_4_9` before `_4_10`. */
+const naturally = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
 const EMPTY_CARRY = (): LogPage['carry'] => ({ lanes: [], colors: [], nextColor: 0 });
 
 /** `rev-parse --verify --quiet` exits 1 for a missing or unborn revision; other codes are real failures. */
@@ -293,17 +295,23 @@ export class GitService {
       'refs/tags',
     ]);
     const branches: string[] = [];
+    const remotes: string[] = [];
     const tags: string[] = [];
     for (const ref of out.split('\n')) {
       if (ref.startsWith('refs/heads/')) branches.push(ref.slice('refs/heads/'.length));
       else if (ref.startsWith('refs/remotes/') && !ref.endsWith('/HEAD'))
-        branches.push(ref.slice('refs/remotes/'.length));
+        remotes.push(ref.slice('refs/remotes/'.length));
       else if (ref.startsWith('refs/tags/')) tags.push(ref.slice('refs/tags/'.length));
     }
+    // Sorted before the cap, so the names that survive it are the first ones (the newest tags).
+    const first = (names: string[], reverse = false) =>
+      names.sort((a, b) => (reverse ? -1 : 1) * naturally.compare(a, b)).slice(0, CONTAINING_MAX);
     return {
-      branches: branches.slice(0, CONTAINING_MAX),
-      tags: tags.slice(0, CONTAINING_MAX),
+      branches: first(branches),
+      remotes: first(remotes),
+      tags: first(tags, true),
       branchCount: branches.length,
+      remoteCount: remotes.length,
       tagCount: tags.length,
     };
   }

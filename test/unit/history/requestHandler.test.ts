@@ -237,22 +237,32 @@ describe('handleRequest: me, head, openExternal', () => {
     expect(await handleRequest({ id: 1, type: 'head' }, ctx())).toBe(hashes[2]);
   });
 
-  it('containing lists the branches (local, then remote, no HEAD alias) and tags that include a commit', async () => {
+  it('containing lists the local and remote branches (no HEAD alias) and tags that include a commit', async () => {
     await repo.git('branch', 'old', hashes[0]!);
     await repo.git('tag', 'v1', hashes[1]!);
     await repo.git('update-ref', 'refs/remotes/origin/main', hashes[2]!);
     await repo.git('symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main');
     const main = (await repo.git('branch', '--show-current')).trim();
     expect(await handleRequest({ id: 1, type: 'containing', hash: hashes[1]! }, ctx())).toEqual({
-      branches: [main, 'origin/main'],
+      branches: [main],
+      remotes: ['origin/main'],
       tags: ['v1'],
-      branchCount: 2,
+      branchCount: 1,
+      remoteCount: 1,
       tagCount: 1,
     });
     expect(await handleRequest({ id: 2, type: 'containing', hash: hashes[0]! }, ctx())).toMatchObject({
-      branches: [main, 'old', 'origin/main'].sort(),
-      branchCount: 3,
+      branches: [main, 'old'].sort(),
+      branchCount: 2,
     });
+  });
+
+  it('containing sorts number-aware: branches A→Z, tags newest first', async () => {
+    for (const b of ['rel-10', 'rel-9', 'Alpha']) await repo.git('branch', b, hashes[2]!);
+    for (const t of ['v1.9', 'v1.10', 'v1.2']) await repo.git('tag', t, hashes[2]!);
+    const c = (await handleRequest({ id: 1, type: 'containing', hash: hashes[2]! }, ctx())) as Containing;
+    expect(c.branches.filter((b) => /^(rel|Alpha)/.test(b))).toEqual(['Alpha', 'rel-9', 'rel-10']);
+    expect(c.tags).toEqual(['v1.10', 'v1.9', 'v1.2']);
   });
 
   it('containing caps the names at 50 but counts them all', async () => {

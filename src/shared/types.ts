@@ -76,10 +76,18 @@ export interface LogPage {
   exactHash?: Hash;
 }
 /** The branches and tags whose history includes a commit (lists capped; counts are complete). */
+/**
+ * The refs that include a commit. Each list holds at most a capped number of names (the counts are
+ * complete), sorted number-aware: branches and remotes A→Z, tags newest version first.
+ */
 export interface Containing {
+  /** Local branches. */
   branches: string[];
+  /** Remote-tracking branches (`origin/main`), without the `origin/HEAD` alias. */
+  remotes: string[];
   tags: string[];
   branchCount: number;
+  remoteCount: number;
   tagCount: number;
 }
 export interface CommitDetails {

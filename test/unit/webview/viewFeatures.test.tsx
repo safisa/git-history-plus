@@ -151,60 +151,122 @@ describe('changed files as a tree', () => {
 
 describe('branches containing a commit', () => {
   const containing = (): Containing => ({
-    branches: ['main', 'dev', 'origin/main'],
+    branches: ['dev', 'main'],
+    remotes: ['origin/a', 'origin/b', 'origin/c', 'origin/d', 'origin/e', 'origin/f', 'origin/g'],
     tags: ['v1.0'],
-    branchCount: 12,
+    branchCount: 2,
+    remoteCount: 60, // more than the extension lists
     tagCount: 1,
   });
 
-  it('the details list the branches and tags that include the commit', async () => {
+  const side = (h: { container: Element }) => h.container.querySelector('.details-side') as HTMLElement;
+  /** Each group as "Title count: name, name…". */
+  const groups = (h: { container: Element }) =>
+    [...side(h).querySelectorAll('.containing-group')].map(
+      (g) =>
+        `${g.querySelector('.containing-group-title')!.textContent}: ${[
+          ...g.querySelectorAll('.containing-name'),
+        ]
+          .map((n) => n.textContent)
+          .join(', ')}`,
+    );
+  const show = (h: { container: Element }) => button(side(h), 'Show branches and tags');
+  const toggle = (h: { container: Element }) =>
+    side(h).querySelector('.containing-toggle') as HTMLButtonElement;
+
+  it('looks them up only when asked, then lists them by group, a long group folded', async () => {
     const h = await mountApp({ width: 900, containing });
     cleanup = h.cleanup;
     click(h.row(1));
     await flush();
-    expect(h.sent.some((r) => r.type === 'containing')).toBe(false); // not before the selection rests
     await wait(350);
-    expect(h.sent).toContainEqual({ type: 'containing', hash: h.commits[1]!.hash });
-    const lines = [...h.container.querySelectorAll('.details-side .containing-line')].map(
-      (l) => l.textContent,
+    expect(h.sent.some((r) => r.type === 'containing')).toBe(false); // selecting alone looks nothing up
+    expect(groups(h)).toEqual([]);
+    click(show(h));
+    await flush();
+    expect(h.sent.filter((r) => r.type === 'containing')).toEqual([
+      { type: 'containing', hash: h.commits[1]!.hash },
+    ]);
+    expect(toggle(h).textContent).toBe('2 local · 60 remote · 1 tag');
+    expect(toggle(h).getAttribute('aria-expanded')).toBe('true');
+    expect(groups(h)).toEqual([
+      'Local2: dev, main',
+      'Remote60: origin/a, origin/b, origin/c, origin/d, origin/e',
+      'Tags1: v1.0',
+    ]);
+    click(button(side(h), 'Show all 60'));
+    expect(groups(h)[1]).toBe(
+      'Remote60: origin/a, origin/b, origin/c, origin/d, origin/e, origin/f, origin/g',
     );
-    expect(lines).toEqual(['Branchesmain, dev, origin/main, and 9 more', 'Tagsv1.0']);
+    expect(side(h).textContent).toContain('and 53 more not listed');
   });
 
-  it('resting the pointer on a row shows a card with them; moving off or clicking hides it', async () => {
+  it('the summary folds and unfolds the list, and stays folded for the next commit', async () => {
     const h = await mountApp({ width: 900, containing });
     cleanup = h.cleanup;
-    const over = (el: Element) =>
-      act(() => {
-        el.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, clientX: 50, clientY: 50 }));
-      });
-    over(h.row(2).querySelector('.subject')!);
-    await wait(300);
-    expect(document.querySelector('.hover-card')).toBeNull(); // not before the pointer rests
-    await wait(500);
-    const card = document.querySelector('.hover-card')!;
-    expect(card.getAttribute('role')).toBe('tooltip');
-    expect(card.textContent).toContain('main, dev, origin/main, and 9 more');
-    act(() => {
-      document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    click(h.row(1));
+    await flush();
+    click(show(h));
+    await flush();
+    click(toggle(h));
+    expect(toggle(h).getAttribute('aria-expanded')).toBe('false');
+    expect(groups(h)).toEqual([]);
+    expect(toggle(h).textContent).toBe('2 local · 60 remote · 1 tag'); // the counts stay in sight
+    click(h.row(2));
+    await flush();
+    expect(show(h)).toBeDefined(); // a commit not looked up yet still waits to be asked
+    click(h.row(1));
+    await flush();
+    expect(groups(h)).toEqual([]); // still folded
+    click(toggle(h));
+    expect(groups(h)).toHaveLength(3);
+    expect(h.sent.filter((r) => r.type === 'containing')).toHaveLength(1); // the answer was kept
+  });
+
+  it('says so when no branch or tag includes the commit', async () => {
+    const none = (): Containing => ({
+      branches: [],
+      remotes: [],
+      tags: [],
+      branchCount: 0,
+      remoteCount: 0,
+      tagCount: 0,
     });
+    const h = await mountApp({ width: 900, containing: none });
+    cleanup = h.cleanup;
+    click(h.row(1));
+    await flush();
+    click(show(h));
+    await flush();
+    expect(side(h).querySelector('.details-containing')!.textContent).toBe(
+      'RefsNo branch or tag includes this commit',
+    );
+  });
+
+  it('a failed lookup says so instead of loading forever', async () => {
+    const h = await mountApp({
+      width: 900,
+      containing: () => {
+        throw new Error('git failed');
+      },
+    });
+    cleanup = h.cleanup;
+    click(h.row(1));
+    await flush();
+    click(show(h));
+    await flush();
+    expect(side(h).querySelector('.details-containing')!.textContent).toBe('RefsCould not list the branches');
+  });
+
+  it('resting the pointer on a row shows no card and looks nothing up', async () => {
+    const h = await mountApp({ width: 900, containing });
+    cleanup = h.cleanup;
+    act(() => {
+      h.row(2).dispatchEvent(new MouseEvent('mouseover', { bubbles: true, clientX: 50, clientY: 50 }));
+    });
+    await wait(750);
     expect(document.querySelector('.hover-card')).toBeNull();
-    over(h.row(3));
-    await wait(750);
-    expect(document.querySelector('.hover-card')).not.toBeNull();
-    act(() => {
-      h.container
-        .querySelector('.commit-scroll')!
-        .dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
-    });
-    expect(document.querySelector('.hover-card')).toBeNull(); // moving off the rows hides it
-    over(h.row(1));
-    await wait(750);
-    expect(document.querySelector('.hover-card')).not.toBeNull();
-    act(() => {
-      h.container.querySelector('.commit-scroll')!.dispatchEvent(new Event('scroll'));
-    });
-    expect(document.querySelector('.hover-card')).toBeNull(); // so does scrolling
+    expect(h.sent.some((r) => r.type === 'containing')).toBe(false);
   });
 });
 
@@ -247,7 +309,7 @@ describe('the uncommitted changes row', () => {
     expect(h.sent.at(-1)).toEqual({ type: 'openDiff', hash: WORKTREE, file: { status: 'M', path: 'a.txt' } });
   });
 
-  it('has no row menu and no copy, and no branches card', async () => {
+  it('has no row menu and no copy', async () => {
     const h = await mountApp({ width: 900, commits: commits() });
     cleanup = h.cleanup;
     act(() => {
@@ -259,11 +321,6 @@ describe('the uncommitted changes row', () => {
     key(h.grid(), 'c');
     await flush();
     expect(h.sent.some((r) => r.type === 'copy')).toBe(false);
-    act(() => {
-      h.row(0).dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
-    });
-    await wait(750);
-    expect(document.querySelector('.hover-card')).toBeNull();
   });
 
   it('the next page skips only real commits', async () => {
@@ -301,21 +358,6 @@ describe('review fixes', () => {
     expect(handles.map((r) => r.tabIndex)).toEqual([-1, 0, -1]);
     key(handles[1]!, 'ArrowUp');
     expect(document.activeElement).toBe(handles[0]);
-  });
-
-  it('a failed branch lookup says so in the card instead of loading forever', async () => {
-    const h = await mountApp({
-      width: 900,
-      containing: () => {
-        throw new Error('git failed');
-      },
-    });
-    cleanup = h.cleanup;
-    act(() => {
-      h.row(1).dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
-    });
-    await wait(750);
-    expect(document.querySelector('.hover-card')!.textContent).toBe('Could not list the branches');
   });
 
   it('the uncommitted details are asked for afresh when selected again or the view regains focus', async () => {

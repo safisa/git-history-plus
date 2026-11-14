@@ -14,7 +14,6 @@ import { commitMenu } from './commitActions';
 import { CommitTable } from './components/CommitTable';
 import { rowId } from './components/CommitRow';
 import { DetailsPanel, commitOps, refMenu } from './components/DetailsPanel';
-import { HoverCard } from './components/Containing';
 import { Menu, isMenuKey, type MenuRequest } from './components/Menu';
 import { Toolbar } from './components/Toolbar';
 import { useLayout } from './layout';
@@ -27,8 +26,6 @@ export const PANEL_MIN = PANEL_MIN_WIDTH;
 export const PANEL_MAX = PANEL_MAX_WIDTH;
 const PANEL_STEP = 16;
 const PAGE_ROWS = 10;
-/** The pointer rests on a row this long before its branches card shows. */
-export const HOVER_MS = 700;
 
 const isFindKey = (e: KeyboardEvent) =>
   (isMac() ? e.metaKey && !e.ctrlKey : e.ctrlKey && !e.metaKey) &&
@@ -52,38 +49,6 @@ export function App({ store }: { store?: Store }) {
   const drag = useRef<{ x: number; width: number }>(undefined);
   const selectedRef = useRef(s.selected);
   selectedRef.current = s.selected;
-  const [hover, setHover] = useState<{ hash: Hash; at: { x: number; y: number } }>();
-  const hovered = useRef<Hash>(undefined);
-  const hoverTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const onRowHover = useCallback(
-    (hash: Hash | undefined, at?: { x: number; y: number }) => {
-      if (hash === hovered.current) return;
-      hovered.current = hash;
-      clearTimeout(hoverTimer.current);
-      setHover(undefined);
-      if (hash === undefined || !at) return;
-      hoverTimer.current = setTimeout(() => {
-        actions.loadContaining(hash);
-        setHover({ hash, at });
-      }, HOVER_MS);
-    },
-    [actions],
-  );
-  // A click, a key or the wheel puts the card away (until the pointer moves to another row).
-  useEffect(() => {
-    if (!hover) return;
-    const hide = () => setHover(undefined);
-    const opts = { capture: true, passive: true };
-    for (const t of ['keydown', 'mousedown', 'wheel'] as const) document.addEventListener(t, hide, opts);
-    return () => {
-      for (const t of ['keydown', 'mousedown', 'wheel'] as const) document.removeEventListener(t, hide, opts);
-    };
-  }, [hover]);
-  useEffect(() => () => clearTimeout(hoverTimer.current), []);
-  // Asks (again) while the card is up without its answer, e.g. after a refresh dropped it.
-  useEffect(() => {
-    if (hover && s.containing[hover.hash] === undefined) actions.loadContaining(hover.hash);
-  }, [actions, hover, s.containing]);
   // Back in the view with the uncommitted changes selected: they may have changed meanwhile.
   useEffect(() => {
     const onFocus = () => {
@@ -389,7 +354,6 @@ export function App({ store }: { store?: Store }) {
           columns={view.columns}
           onResizeColumn={view.resizeColumn}
           onResizeColumnEnd={view.flush}
-          onRowHover={onRowHover}
         />
         {wide && (
           <>
@@ -419,7 +383,6 @@ export function App({ store }: { store?: Store }) {
         )}
       </div>
       {menu && <Menu request={menu} onClose={closeMenu} />}
-      {hover && !menu && <HoverCard containing={s.containing[hover.hash]} at={hover.at} />}
     </div>
   );
 }

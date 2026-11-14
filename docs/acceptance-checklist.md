@@ -23,8 +23,8 @@ terminal, workspace and others, with the built-in `vscode.git` 1.95.3), driving 
   folder. File history follows a rename; the folder history lists only commits under the folder.
 - The commit table renders with the graph (merge lanes), branch, remote and tag badges, `main ☁ origin` folding,
   dimmed merges, the dashed uncommitted changes row, and the `<svg/onload=alert(1)>` branch name as plain text.
-- Details: parent links, the branches and tags containing the commit (also in the hover card), the file list and
-  the tree toggle.
+- Details: parent links, Show branches and tags (looked up only on that click), the Description section, the file
+  list and the tree toggle.
 - A click on a changed file opens a preview diff that the next click replaces; a double-click keeps it. Uncommitted
   files open as HEAD ↔ working tree diffs; a past version opens with Previous / Next and refuses edits ("This is a
   past version from git history and can't be edited.").

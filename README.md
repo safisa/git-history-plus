@@ -32,8 +32,9 @@ GitHistory Plus is a maintained, rebuilt successor to [Git History](https://gith
 **Commit list and details**
 
 - **Commit details** in a side panel when the view is wide, or under the commit when it is narrow: message, people
-  and dates, parents, the branches and tags that contain it, and the changed files with +/− counts.
-- Hover a commit to see **which branches and tags contain it**.
+  and dates, parents, and the changed files with +/− counts.
+- **Which branches and tags contain a commit**, one click away in its details (looked up only when you ask, since it
+  can take a while in a large repository).
 - **Issue links**: keys like `ABC-123` in commit messages link to your tracker (`issueLinks` setting).
 - Changed files as a **list or a folder tree** (single-child folders merged).
 - A click on a file opens a **preview diff**; a double-click or **Open Changes** keeps the tab, as in VS Code.

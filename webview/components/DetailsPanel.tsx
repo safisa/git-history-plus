@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { ViewSettings } from '../../src/shared/protocol';
 import { formatDate } from '../../src/shared/dateFormat';
 import {
@@ -14,8 +14,9 @@ import {
 } from '../../src/shared/types';
 import { COMMIT_ACTIONS, commitMenu, refActions, type MenuEntry } from '../commitActions';
 import { compileIssueLinks, linkify } from '../issueLinks';
+import { reflow } from '../reflow';
 import type { Actions } from '../store';
-import { ContainingLines } from './Containing';
+import { ContainingList, containingSummary } from './Containing';
 import { FileList } from './FileList';
 import { below, type MenuRequest } from './Menu';
 import { RefBadge, sortRefs } from './RefBadge';
@@ -123,9 +124,6 @@ function ChangedFiles(p: ChangedFilesProps) {
   );
 }
 
-/** How long a selection rests before its branches and tags are looked up. */
-export const CONTAINING_DELAY_MS = 300;
-
 const samePerson = (a: Person, b: Person) => a.name === b.name && a.email === b.email;
 
 /** "Dana Levi" → "DL", "safisa" → "S": stands in for the avatar when none is known. */
@@ -146,13 +144,16 @@ export function DetailsPanel(p: DetailsPanelProps) {
   }, [actions, hash, missing]);
   /** The uncommitted changes row: files only, no commit metadata or actions. */
   const worktree = hash === WORKTREE;
-  const containingMissing = p.containing === undefined && !worktree;
-  // Only once the selection rests: holding an arrow key must not start a branch walk per commit.
+  // Finding the branches and tags that include a commit walks every ref, which can take a while in a
+  // big repository: it runs only when asked for (and again after a refresh drops the answer).
+  const [askedFor, setAskedFor] = useState<Hash>();
+  const wantContaining = askedFor === hash && !worktree;
+  // Open or folded, the list stays that way from one commit to the next (once a commit's refs are known).
+  const [refsOpen, setRefsOpen] = useState(true);
+  const refsId = `refs-${hash}`;
   useEffect(() => {
-    if (!containingMissing) return;
-    const t = setTimeout(() => actions.loadContaining(hash), CONTAINING_DELAY_MS);
-    return () => clearTimeout(t);
-  }, [actions, hash, containingMissing]);
+    if (wantContaining && p.containing === undefined) actions.loadContaining(hash);
+  }, [actions, hash, wantContaining, p.containing]);
 
   const ops = commitOps(hash, actions, p.announce);
   const now = Date.now();
@@ -330,33 +331,81 @@ export function DetailsPanel(p: DetailsPanelProps) {
                 )}
               </div>
             </div>
-            {((commit.parents.length > 0 && p.onGoTo) || p.containing) && (
-              <div className="details-facts">
-                {commit.parents.length > 0 && p.onGoTo && (
-                  <div className="details-line details-parents">
-                    <span className="details-label">{commit.parents.length > 1 ? 'Parents' : 'Parent'}</span>
-                    <span className="details-fact-value">
-                      {commit.parents.map((parent) => (
-                        <button
-                          key={parent}
-                          type="button"
-                          className="link-button details-hash"
-                          aria-label={`Go to parent ${parent.slice(0, 7)}`}
-                          title={`Go to ${parent}`}
-                          onClick={() => p.onGoTo!(parent)}
-                        >
-                          {parent.slice(0, 7)}
-                        </button>
-                      ))}
-                    </span>
-                  </div>
-                )}
-                {p.containing && <ContainingLines containing={p.containing} max={10} />}
+            <div className="details-facts">
+              {commit.parents.length > 0 && p.onGoTo && (
+                <div className="details-line details-parents">
+                  <span className="details-label">{commit.parents.length > 1 ? 'Parents' : 'Parent'}</span>
+                  <span className="details-fact-value">
+                    {commit.parents.map((parent) => (
+                      <button
+                        key={parent}
+                        type="button"
+                        className="link-button details-hash"
+                        aria-label={`Go to parent ${parent.slice(0, 7)}`}
+                        title={`Go to ${parent}`}
+                        onClick={() => p.onGoTo!(parent)}
+                      >
+                        {parent.slice(0, 7)}
+                      </button>
+                    ))}
+                  </span>
+                </div>
+              )}
+              <div className="details-line details-containing">
+                <span className="details-label">Refs</span>
+                <div className="details-fact-value">
+                  {p.containing ? (
+                    p.containing.branchCount + p.containing.remoteCount + p.containing.tagCount === 0 ? (
+                      <span>No branch or tag includes this commit</span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="link-button containing-toggle"
+                        aria-expanded={refsOpen}
+                        aria-controls={refsOpen ? refsId : undefined}
+                        title={refsOpen ? 'Hide the branches and tags' : 'Show the branches and tags'}
+                        onClick={() => setRefsOpen(!refsOpen)}
+                      >
+                        <span
+                          className={`codicon codicon-chevron-${refsOpen ? 'down' : 'right'}`}
+                          aria-hidden="true"
+                        />
+                        {containingSummary(p.containing)}
+                      </button>
+                    )
+                  ) : p.containing === null ? (
+                    <span>Could not list the branches</span>
+                  ) : wantContaining ? (
+                    <span role="status">Finding branches and tags…</span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="link-button details-link containing-toggle"
+                      aria-expanded={false}
+                      title="List the branches and tags that include this commit"
+                      onClick={() => {
+                        setAskedFor(hash);
+                        setRefsOpen(true);
+                      }}
+                    >
+                      <span className="codicon codicon-chevron-right" aria-hidden="true" />
+                      Show branches and tags
+                    </button>
+                  )}
+                </div>
               </div>
-            )}
+              {p.containing && refsOpen && (
+                <ContainingList key={hash} id={refsId} containing={p.containing} />
+              )}
+            </div>
           </div>
 
-          {commit.body && <div className="details-body">{rich(commit.body)}</div>}
+          {commit.body && (
+            <section className="details-section details-message" aria-label="Description">
+              <h3 className="details-section-heading">Description</h3>
+              <div className="details-body">{rich(reflow(commit.body))}</div>
+            </section>
+          )}
 
           <div role="group" aria-label="Actions" className="details-actions details-section">
             {COMMIT_ACTIONS.map((a) => (

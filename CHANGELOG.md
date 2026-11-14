@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- A clearer commit details panel: the hash and refs under the subject, an author card, parents, branches and tags
+  in one aligned table, the message body under its own **Description** heading, and the actions in even columns.
+- Hard-wrapped commit messages are reflowed to fit the panel; lists, indented lines, code fences and trailers keep
+  their line breaks.
+- The branches and tags that contain a commit are looked up when you click **Show branches and tags** rather than on
+  every selection, and the hover card that listed them is gone. They show as a list grouped into Local, Remote and
+  Tags, sorted number-aware (tags newest first), each group folded to its first five names. The summary line
+  (`3 local · 9 remote · 6 tags`) folds and unfolds the list.
+
 ## 1.0.0
 
 First stable release. Commands and settings are unchanged.

@@ -53,8 +53,6 @@ export interface CommitTableProps {
   onResizeColumn?(column: Column, width: number): void;
   /** A column drag ended. */
   onResizeColumnEnd?(): void;
-  /** The pointer moved onto a commit row (with the point under it), or off the rows. */
-  onRowHover?(hash: Hash | undefined, at?: { x: number; y: number }): void;
 }
 
 /** Ask for the next page once the last rendered row is this close to the end. */
@@ -165,21 +163,7 @@ export function CommitTable(p: CommitTableProps) {
             })}
           </div>
         </div>
-        <div
-          className="commit-scroll"
-          ref={scrollRef}
-          onScroll={p.onRowHover && (() => p.onRowHover!(undefined))}
-          onMouseOver={
-            p.onRowHover &&
-            ((e) => {
-              const row = e.target instanceof Element ? e.target.closest<HTMLElement>('[data-hash]') : null;
-              const hash = row?.dataset.hash;
-              if (!row || !hash || hash === WORKTREE) return p.onRowHover!(undefined);
-              p.onRowHover!(hash, { x: e.clientX, y: row.getBoundingClientRect().bottom });
-            })
-          }
-          onMouseLeave={p.onRowHover && (() => p.onRowHover!(undefined))}
-        >
+        <div className="commit-scroll" ref={scrollRef}>
           {empty && loading ? (
             <Skeleton compact={p.compact} />
           ) : (

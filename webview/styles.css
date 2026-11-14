@@ -576,7 +576,8 @@ input[aria-invalid='true'] {
   outline: 1px solid var(--vscode-focusBorder);
   outline-offset: 1px;
 }
-.issue-link {
+.issue-link,
+.details-link {
   color: var(--vscode-textLink-foreground);
 }
 .details-refs {
@@ -584,12 +585,17 @@ input[aria-invalid='true'] {
   flex-wrap: wrap;
   gap: 4px;
 }
+/* The commit message body, under its own heading: readable prose, not a side note. */
+.details-message {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 .details-body {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  padding: 6px 8px;
-  border-left: 2px solid var(--vscode-textBlockQuote-border, var(--vscode-widget-border, transparent));
-  background: var(--vscode-textBlockQuote-background, transparent);
+  line-height: 1.45;
+  color: var(--vscode-foreground);
 }
 /* A rule above a block that starts a new part of the panel. */
 .details-section,
@@ -629,6 +635,7 @@ input[aria-invalid='true'] {
   justify-content: space-between;
   gap: 4px;
 }
+.details-section-heading,
 .details-files-heading {
   margin: 0;
   font-size: 11px;
@@ -1164,29 +1171,98 @@ body:not(.vscode-high-contrast):not(.vscode-high-contrast-light)
   }
 }
 
-/* ---------- branches card (hovering a commit) ---------- */
+/* ---------- branches and tags containing a commit (details) ---------- */
 
-.hover-card {
-  position: fixed;
-  z-index: 20;
-  box-sizing: border-box;
-  max-width: 320px;
-  padding: 4px 8px;
-  color: var(--vscode-editorHoverWidget-foreground, var(--vscode-foreground));
-  background: var(--vscode-editorHoverWidget-background, var(--vscode-editorWidget-background));
-  border: 1px solid var(--vscode-editorHoverWidget-border, var(--vscode-widget-border, transparent));
-  border-radius: 3px;
-  box-shadow: 0 2px 8px var(--vscode-widget-shadow, transparent);
-  pointer-events: none;
-}
-.containing-line {
-  align-items: baseline;
-}
-.containing-names {
-  min-width: 0;
+.containing-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: -2px;
   color: var(--vscode-foreground);
-  white-space: normal;
-  overflow-wrap: anywhere;
+  text-align: left;
+}
+.containing-toggle.details-link {
+  color: var(--vscode-textLink-foreground);
+}
+.containing-toggle .codicon {
+  flex: none;
+  font-size: 14px;
+}
+/* The groups line up under the values, one name per line. */
+.containing-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 2px 0 2px 70px;
+}
+.containing-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.containing-group-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--vscode-descriptionForeground);
+}
+.containing-count {
+  padding: 0 5px;
+  font-size: 10px;
+  line-height: 14px;
+  letter-spacing: 0;
+  color: var(--vscode-badge-foreground);
+  background: var(--vscode-badge-background);
+  border-radius: 7px;
+}
+.containing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.containing-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  line-height: 18px;
+}
+.containing-item .codicon {
+  flex: none;
+  font-size: 13px;
+}
+.containing-group[aria-label='Local'] .codicon {
+  color: var(--vscode-charts-green, var(--vscode-gitDecoration-addedResourceForeground));
+}
+.containing-group[aria-label='Remote'] .codicon {
+  color: var(--vscode-charts-blue, var(--vscode-gitDecoration-modifiedResourceForeground));
+}
+.containing-group[aria-label='Tags'] .codicon {
+  color: var(--vscode-charts-purple, var(--vscode-gitDecoration-submoduleResourceForeground));
+}
+.containing-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--vscode-foreground);
+}
+.containing-more {
+  align-self: flex-start;
+  font-size: 12px;
+}
+span.containing-more {
+  color: var(--vscode-descriptionForeground);
+}
+.app.is-narrow .containing-groups {
+  margin-left: 0;
 }
 
 /* ---------- uncommitted changes row ---------- */
