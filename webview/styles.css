@@ -415,10 +415,11 @@ input[aria-invalid='true'] {
 
 /* ---- Details (side panel and in place) ---- */
 .details {
+  --details-rule: var(--vscode-panel-border, var(--vscode-widget-border, rgba(128, 128, 128, 0.35)));
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 10px;
+  padding: 10px 12px;
   white-space: normal;
 }
 .details-header {
@@ -430,14 +431,16 @@ input[aria-invalid='true'] {
   flex: 1;
   min-width: 0;
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
+  line-height: 1.35;
   overflow-wrap: anywhere;
 }
+/* Identity, people and facts: each its own block, split by rules. */
 .details-meta {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 10px;
 }
 .details-line {
   display: flex;
@@ -445,6 +448,28 @@ input[aria-invalid='true'] {
   align-items: center;
   gap: 4px 6px;
   color: var(--vscode-descriptionForeground);
+}
+/* Hash pill and ref badges, right under the subject. */
+.details-id {
+  margin-top: -4px;
+}
+.details-sha {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 0 0 6px;
+  border: 1px solid var(--details-rule);
+  border-radius: 4px;
+  background: var(--vscode-textCodeBlock-background, transparent);
+}
+.details-sha > .codicon {
+  font-size: 14px;
+}
+.details-sha .icon-button {
+  height: 20px;
+  min-width: 20px;
+  border-radius: 0 3px 3px 0;
+  border-left: 1px solid var(--details-rule);
 }
 .details-name {
   color: var(--vscode-foreground);
@@ -455,6 +480,85 @@ input[aria-invalid='true'] {
 .details-hash {
   font-family: var(--vscode-editor-font-family);
   color: var(--vscode-textLink-foreground);
+}
+/* Author (and committer): avatar beside name/date and email. */
+.details-person {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--details-rule);
+}
+.avatar--initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vscode-badge-foreground);
+  background: var(--vscode-badge-background);
+  user-select: none;
+}
+.details-person-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  color: var(--vscode-descriptionForeground);
+}
+.details-person-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 8px;
+}
+.details-person-top .details-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.details-date {
+  flex: none;
+  font-size: 12px;
+}
+.details-person-text > .details-email {
+  font-size: 12px;
+}
+.details-committer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 4px;
+  margin-top: 2px;
+  font-size: 12px;
+}
+.details-committer .codicon {
+  font-size: 13px;
+}
+/* Parents, Branches, Tags: labels in one column, values beside them. */
+.details-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: var(--vscode-textCodeBlock-background, transparent);
+}
+.details-facts > .details-line {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 6px;
+}
+.details-label {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+.details-fact-value {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
 }
 .link-button {
   padding: 0;
@@ -487,22 +591,48 @@ input[aria-invalid='true'] {
   border-left: 2px solid var(--vscode-textBlockQuote-border, var(--vscode-widget-border, transparent));
   background: var(--vscode-textBlockQuote-background, transparent);
 }
+/* A rule above a block that starts a new part of the panel. */
+.details-section,
+.details-files-bar {
+  padding-top: 10px;
+  border-top: 1px solid var(--details-rule);
+}
+/* Equal-width buttons in tidy columns rather than a ragged run. */
 .details-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
   gap: 4px;
+}
+.details-actions--compare {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  margin-top: -4px;
+}
+.details-actions button.small {
+  min-width: 0;
+  padding: 2px 4px;
+}
+.button-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.details-actions button.is-danger .codicon {
+  color: var(--vscode-errorForeground);
+}
+.details-actions button.is-danger:hover {
+  color: var(--vscode-errorForeground);
 }
 .details-files-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 4px;
-  margin: 4px 0 0;
 }
 .details-files-heading {
   margin: 0;
-  font-size: 10px;
-  font-weight: normal;
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--vscode-descriptionForeground);

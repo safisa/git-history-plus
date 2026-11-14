@@ -13,6 +13,8 @@ export interface ActionDef {
   action: CommitAction;
   label: string;
   icon: string;
+  /** Throws work away: drawn as a warning in the details panel. */
+  danger?: boolean;
 }
 
 /**
@@ -26,7 +28,7 @@ export const COMMIT_ACTIONS: readonly ActionDef[] = [
   { action: 'merge', label: 'Merge', icon: 'git-merge' },
   { action: 'rebase', label: 'Rebase', icon: 'git-pull-request' },
   { action: 'resetSoft', label: 'Reset (soft)', icon: 'history' },
-  { action: 'resetHard', label: 'Reset (hard)', icon: 'warning' },
+  { action: 'resetHard', label: 'Reset (hard)', icon: 'warning', danger: true },
   { action: 'createBranch', label: 'Create branch…', icon: 'git-branch' },
   { action: 'createTag', label: 'Create tag…', icon: 'tag' },
 ];

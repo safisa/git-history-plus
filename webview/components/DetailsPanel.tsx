@@ -128,6 +128,13 @@ export const CONTAINING_DELAY_MS = 300;
 
 const samePerson = (a: Person, b: Person) => a.name === b.name && a.email === b.email;
 
+/** "Dana Levi" → "DL", "safisa" → "S": stands in for the avatar when none is known. */
+export function initials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const letters = words.length > 1 ? [words[0]!, words.at(-1)!] : words;
+  return letters.map((w) => [...w][0]!.toUpperCase()).join('') || '?';
+}
+
 /** Subject, body, people and dates, actions, compare entry points and the changed files. */
 export function DetailsPanel(p: DetailsPanelProps) {
   const { commit, actions, settings } = p;
@@ -248,19 +255,22 @@ export function DetailsPanel(p: DetailsPanelProps) {
       ) : (
         <>
           <div className="details-meta">
-            <div className="details-line">
-              <span className="details-hash" title={hash}>
-                {hash.slice(0, 10)}
+            <div className="details-line details-id">
+              <span className="details-sha">
+                <span className="codicon codicon-git-commit" aria-hidden="true" />
+                <span className="details-hash" title={hash}>
+                  {hash.slice(0, 10)}
+                </span>
+                <button
+                  type="button"
+                  className="icon-button"
+                  aria-label="Copy commit hash"
+                  title="Copy commit hash (c)"
+                  onClick={ops.copyHash}
+                >
+                  <span className="codicon codicon-copy" aria-hidden="true" />
+                </button>
               </span>
-              <button
-                type="button"
-                className="icon-button"
-                aria-label="Copy commit hash"
-                title="Copy commit hash (c)"
-                onClick={ops.copyHash}
-              >
-                <span className="codicon codicon-copy" aria-hidden="true" />
-              </button>
               {commit.refs.length > 0 && (
                 <span className="details-refs">
                   {sortRefs(commit.refs).map((r) => {
@@ -289,65 +299,83 @@ export function DetailsPanel(p: DetailsPanelProps) {
                 </span>
               )}
             </div>
-            {commit.parents.length > 0 && p.onGoTo && (
-              <div className="details-line details-parents">
-                <span className="details-label">{commit.parents.length > 1 ? 'Parents' : 'Parent'}</span>
-                {commit.parents.map((parent) => (
-                  <button
-                    key={parent}
-                    type="button"
-                    className="link-button details-hash"
-                    aria-label={`Go to parent ${parent.slice(0, 7)}`}
-                    title={`Go to ${parent}`}
-                    onClick={() => p.onGoTo!(parent)}
-                  >
-                    {parent.slice(0, 7)}
-                  </button>
-                ))}
-              </div>
-            )}
-            {p.containing && <ContainingLines containing={p.containing} max={10} />}
-            <div className="details-line">
+            <div className="details-person">
               {p.avatar !== undefined ? (
                 <img className="avatar avatar--large" src={p.avatar} alt="" width={32} height={32} />
               ) : (
-                <span className="codicon codicon-person" aria-hidden="true" />
+                <span className="avatar avatar--large avatar--initials" aria-hidden="true">
+                  {initials(commit.author.name)}
+                </span>
               )}
-              <span className="details-name">{commit.author.name}</span>
-              <span className="details-email">{commit.author.email}</span>
-              <span aria-hidden="true">·</span>
-              {when(commit.authorDate)}
+              <div className="details-person-text">
+                <div className="details-person-top">
+                  <span className="details-name" title={commit.author.email}>
+                    {commit.author.name}
+                  </span>
+                  <span className="details-date">{when(commit.authorDate)}</span>
+                </div>
+                <div className="details-email">{commit.author.email}</div>
+                {!samePerson(commit.author, commit.committer) && (
+                  <div className="details-committer">
+                    <span className="codicon codicon-git-commit" aria-hidden="true" />
+                    <span>
+                      Committed by{' '}
+                      <span className="details-name" title={commit.committer.email}>
+                        {commit.committer.name}
+                      </span>
+                    </span>
+                    <span aria-hidden="true">·</span>
+                    {when(commit.commitDate)}
+                  </div>
+                )}
+              </div>
             </div>
-            {!samePerson(commit.author, commit.committer) && (
-              <div className="details-line details-committer">
-                <span className="codicon codicon-git-commit" aria-hidden="true" />
-                Committed by <span className="details-name">{commit.committer.name}</span>
-                <span className="details-email">{commit.committer.email}</span>
-                <span aria-hidden="true">·</span>
-                {when(commit.commitDate)}
+            {((commit.parents.length > 0 && p.onGoTo) || p.containing) && (
+              <div className="details-facts">
+                {commit.parents.length > 0 && p.onGoTo && (
+                  <div className="details-line details-parents">
+                    <span className="details-label">{commit.parents.length > 1 ? 'Parents' : 'Parent'}</span>
+                    <span className="details-fact-value">
+                      {commit.parents.map((parent) => (
+                        <button
+                          key={parent}
+                          type="button"
+                          className="link-button details-hash"
+                          aria-label={`Go to parent ${parent.slice(0, 7)}`}
+                          title={`Go to ${parent}`}
+                          onClick={() => p.onGoTo!(parent)}
+                        >
+                          {parent.slice(0, 7)}
+                        </button>
+                      ))}
+                    </span>
+                  </div>
+                )}
+                {p.containing && <ContainingLines containing={p.containing} max={10} />}
               </div>
             )}
           </div>
 
           {commit.body && <div className="details-body">{rich(commit.body)}</div>}
 
-          <div role="group" aria-label="Actions" className="details-actions">
+          <div role="group" aria-label="Actions" className="details-actions details-section">
             {COMMIT_ACTIONS.map((a) => (
               <button
                 key={a.action}
                 type="button"
-                className="secondary small"
+                className={`secondary small${a.danger ? ' is-danger' : ''}`}
+                title={a.label}
                 onClick={() => ops.runAction(a.action)}
               >
                 <span className={`codicon codicon-${a.icon}`} aria-hidden="true" />
-                {a.label}
+                <span className="button-label">{a.label}</span>
               </button>
             ))}
           </div>
-          <div role="group" aria-label="Compare" className="details-actions">
+          <div role="group" aria-label="Compare" className="details-actions details-actions--compare">
             <button type="button" className="secondary small" onClick={ops.selectForComparison}>
               <span className="codicon codicon-target" aria-hidden="true" />
-              Select for comparison
+              <span className="button-label">Select for comparison</span>
             </button>
             {canCompare && (
               <button
@@ -357,12 +385,12 @@ export function DetailsPanel(p: DetailsPanelProps) {
                 onClick={ops.compareWithSelected}
               >
                 <span className="codicon codicon-git-compare" aria-hidden="true" />
-                Compare with selected
+                <span className="button-label">Compare with selected</span>
               </button>
             )}
             <button type="button" className="secondary small" onClick={ops.showInExplorer}>
               <span className="codicon codicon-list-tree" aria-hidden="true" />
-              Show in Explorer
+              <span className="button-label">Show in Explorer</span>
             </button>
           </div>
         </>
