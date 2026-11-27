@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.1
+
+A refreshed store page. Commands and settings are unchanged.
+
+- The README opens with an animated tour of the history view, and shows the repository history, file history and
+  compare views.
+- The display name is now **GitHistory Plus: Git Log & File History**, with an updated description and keywords so the
+  extension is easier to find.
+
 ## 1.1.0
 
 A redesigned commit details panel. Commands and settings are unchanged.
