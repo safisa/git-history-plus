@@ -1,7 +1,7 @@
 {
   "name": "githistory-plus",
-  "displayName": "GitHistory Plus",
-  "description": "Git log, file, folder and line history with a commit graph, uncommitted changes, branch lookups and compare. A rebuilt and extended fork of Git History.",
+  "displayName": "GitHistory Plus: Git Log & File History",
+  "description": "Git log, file, folder and line history with a commit graph, uncommitted changes, branch lookups and compare. A maintained fork of Git History.",
   "version": "1.1.0",
   "publisher": "safisa",
   "license": "MIT",
@@ -11,20 +11,36 @@
     "url": "https://github.com/safisa/git-history-plus.git"
   },
   "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#1C2333",
+    "theme": "dark"
+  },
   "keywords": [
     "git",
+    "git history",
+    "githistory",
     "history",
     "git log",
+    "git log viewer",
     "git graph",
+    "commit graph",
     "file history",
+    "folder history",
     "line history",
+    "commit",
+    "branch",
+    "tag",
     "compare",
+    "compare branches",
     "diff",
+    "cherry-pick",
+    "rebase",
+    "vscodium",
     "theia"
   ],
   "categories": [
     "SCM Providers",
-    "Other"
+    "Visualization"
   ],
   "engines": {
     "vscode": "^1.101.0",

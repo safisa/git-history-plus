@@ -3,6 +3,12 @@
 Git log, file, folder and line history with a commit graph, uncommitted changes, branch and tag comparison and
 commit actions, in VS Code and Eclipse Theia.
 
+![Opening the history from the status bar, picking and searching commits, and opening a diff](images/screenshots/history.gif)
+
+Install it from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=safisa.githistory-plus)
+or from [Open VSX](https://open-vsx.org/extension/safisa/githistory-plus) (for VSCodium, Eclipse Theia and other editors
+that use Open VSX).
+
 GitHistory Plus is a maintained, rebuilt successor to [Git History](https://github.com/DonJayamanne/gitHistoryVSCode)
 (`donjayamanne.githistory`) by DonJayamanne, which is no longer maintained:
 
@@ -13,7 +19,12 @@ GitHistory Plus is a maintained, rebuilt successor to [Git History](https://gith
   tree.
 - **Long-standing bugs fixed**: dates, symlinked and Windows paths, compare results, crashes, repository discovery.
 
+Coming from Git History? Disable or uninstall it after installing GitHistory Plus, so the two don't add duplicate
+buttons and menu items.
+
 ## Features
+
+![The repository history: commit graph, branch and tag badges, and the details of the selected commit](images/screenshots/history.png)
 
 **History**
 
@@ -28,6 +39,8 @@ GitHistory Plus is a maintained, rebuilt successor to [Git History](https://gith
 - **Fetch** from all remotes, with prune, from the toolbar.
 - **Go to HEAD**, and clickable **parent** hashes that jump to the parent commit.
 - **Previous / Next** buttons to step through a file's versions in one reused diff tab.
+
+![File history beside the editor, with the details shown under the commit in a narrow view](images/screenshots/file-history.png)
 
 **Commit list and details**
 
@@ -52,6 +65,8 @@ GitHistory Plus is a maintained, rebuilt successor to [Git History](https://gith
 - **Commit actions**: checkout, cherry-pick, revert, merge, rebase, soft and hard reset, create branch, create and
   remove tag, remove a local or remote branch. Destructive ones ask for confirmation first.
 - **Read-only past versions**: files opened at a commit can't be edited by mistake.
+
+![Comparing two tags: the changed files in the Compare Commits view and a side-by-side diff](images/screenshots/compare.png)
 
 **Everywhere**
 
